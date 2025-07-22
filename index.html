@@ -1306,7 +1306,7 @@ nav ul li {
 </div>
 <div id="loggedInUser" style="position:absolute; top:15px; right:20px; color:white; font-weight:bold;"></div>
 
- <nav>
+<nav>
   <ul>
     <li><a class="menu-box" href="#" onclick="showPage('home')">
       <img src="https://i.imgur.com/lek58ah.jpeg" alt="Home">
@@ -1383,7 +1383,6 @@ nav ul li {
     </li>
   </ul>
 </nav>
-
 
 </header>
 <!-- ✅ How to Use the System Section -->
@@ -1833,6 +1832,14 @@ nav ul li {
 
 </div>
 
+<!-- Confirm Delete Modal -->
+<div id="confirmDeleteModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); justify-content:center; align-items:center; z-index:9999;">
+  <div style="background:white; padding:20px; border-radius:8px; text-align:center;">
+    <p>Are you sure you want to delete this  job?</p>
+    <button id="confirmDeleteBtn" style="margin: 5px;">Yes, Delete</button>
+    <button onclick="closeDeleteModal()" style="margin: 5px;">Cancel</button>
+  </div>
+</div>
 <h3>
   <i class="fas fa-clipboard-list" style="color:#6f42c1; margin-right: 8px;"></i>
   Available Job Opportunities
@@ -2578,6 +2585,27 @@ Register To Connect With  Available Soulmates
   </div>
 </div>
 
+
+<!-- ✅ Confirm Delete Modal -->
+<div id="confirmDeleteModal" style="display:none; position: fixed; top: 0; left: 0;
+  width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000; justify-content: center; align-items: center;">
+  <div style="background: white; padding: 20px 25px; border-radius: 10px; box-shadow: 0 6px 12px rgba(0,0,0,0.3);
+      width: 90%; max-width: 400px; text-align: center;">
+    <h3 style="margin-bottom: 10px; color: #dc3545;">Confirm Deletion</h3>
+    <p style="font-size: 16px;">Are you sure you want to delete this swap?</p>
+    <div style="height: 8px; background: #eee; border-radius: 5px; margin-top: 15px;">
+      <div id="confirmProgressBar" style="width: 100%; height: 8px; background-color: #28a745; border-radius: 5px;"></div>
+    </div>
+    <span style="color: crimson; font-weight: bold;">🔥 VIP</span>
+    <div style="margin-top: 20px;">
+      <button id="confirmYes" style="background-color: #dc3545; color: white; padding: 10px 20px; border: none;
+        border-radius: 6px; margin-right: 10px; cursor: pointer;">Yes, Delete</button>
+      <button id="confirmNo" style="background-color: #6c757d; color: white; padding: 10px 20px; border: none;
+        border-radius: 6px; cursor: pointer;">Cancel</button>
+    </div>
+  </div>
+</div>
+
 <!-- ✅ Notification Badge -->
 <span id="notifBadge" style="display:none; background:red; color:white; border-radius:50%; padding:2px 6px;">0</span>
 
@@ -2612,6 +2640,23 @@ Register To Connect With  Available Soulmates
     cursor: pointer;">&times;
   </button>
 </div>
+<!-- 📘 HOW TO USE THE SYSTEM SECTION -->
+<section id="usageHelp" style="display:none; padding: 20px;">
+  <h2 style="color:#2196f3; text-align:center;">📘 How to Use the System</h2>
+  <div style="max-width:800px;margin:auto;background:#f9f9f9;padding:20px;border-radius:10px;">
+    <ul style="line-height:1.7;">
+      <li>✅ <strong>Register</strong> before using any features.</li>
+      <li>🔄 Use the <strong>Swaps</strong> section to find transfer opportunities.</li>
+      <li>❤️ <strong>Soulmate</strong> helps you discover and connect with others.</li>
+      <li>🛍️ <strong>Market</strong> lets you sell or buy items easily.</li>
+      <li>🛠️ <strong>Services</strong> and <strong>Jobs</strong> let you post skills or vacancies.</li>
+      <li>💳 <strong>Boost</strong> your listing to appear in 🔥 Trending for 7 days.</li>
+      <li>🔐 You may need to <strong>pay</strong> via MPESA to unlock contacts.</li>
+    </ul>
+    <p style="color:#888;font-style:italic;">Need help? Contact admin or check the Notifications tab for updates.</p>
+  </div>
+</section>
+
 <!-- ✅ Toast Container -->
 <div id="toastContainer" style="position: fixed; bottom: 20px; right: 20px; z-index: 9999;"></div>
 <!-- ✅ Firebase SDKs -->
@@ -2619,6 +2664,7 @@ Register To Connect With  Available Soulmates
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-storage-compat.js"></script>
+
 
 <script>
   // ✅ Firebase Config
