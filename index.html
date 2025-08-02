@@ -1335,7 +1335,56 @@ nav ul li {
 .star.selected {
   color: gold;
 }
+.photo-container {
+    position: relative;
+    width: 200px;
+    text-align: center;
+    background-color: #f8f8f8;
+    border-radius: 10px;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: 320px;
+  }
 
+  .photo-container img {
+    width: 100%;
+    height: 150px;
+    object-fit: cover;
+  }
+
+  .buy-button {
+    position: relative;
+    margin-top: 10px;
+    background-color: #4CAF50;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+    margin-top: auto;
+  }
+
+  .photo-container:hover img {
+    filter: blur(5px);
+  }
+
+  /* Modal Styles */
+  #imageModal {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+  }
+
+  #buyNowButton {
+    display: block;
+  }
+
+  #downloadButton {
+    display: none; /* Hidden until after payment */
+  }
 </style>
 
 </head>
@@ -1355,7 +1404,6 @@ nav ul li {
   </div>
 </div>
 <div id="loggedInUser" style="position:absolute; top:15px; right:20px; color:white; font-weight:bold;"></div>
-
 <nav>
   <ul>
     <li><a class="menu-box" href="#" onclick="showPage('home')">
@@ -1403,13 +1451,12 @@ nav ul li {
       <span>Market</span></a>
     </li>
 
-    <li><a class="menu-box" href="#" onclick="showPage('contact')">
-      <img src="https://i.imgur.com/SPqGvz9.jpeg" alt="Contact">
-      <span>Contact Us</span></a>
+    <li><a class="menu-box" href="#" onclick="showPage('gallery')">
+      <img src="https://i.imgur.com/GavIBlL.jpeg" alt="Gallery">
+      <span> Resources </span></a>
     </li>
 
- <li><a class="menu-box" href="#" onclick="showPage('trendingSection'); loadTrendingItems();">
-
+    <li><a class="menu-box" href="#" onclick="showPage('trendingSection'); loadTrendingItems();">
       <img src="https://i.imgur.com/DmfP8G0.jpeg" alt="Trending">
       <span>🔥 Trending</span></a>
     </li>
@@ -1430,17 +1477,92 @@ nav ul li {
     <li><a class="menu-box" href="#" onclick="showMyChats()">
       <img src="https://i.imgur.com/6su2d7i.jpeg" alt="My Chats">
       <span>My Chats</span></a>
- 
-<li>
-  <a href="#" onclick="showPage('saved'); viewSavedItems()">
-    💾 Saved Items
-  </a>
-</li>
+    </li>
 
+    <li><a class="menu-box" href="#" onclick="showPage('contact')">
+      <img src="https://i.imgur.com/SPqGvz9.jpeg" alt="Contact">
+      <span>Contact Us</span></a>
+    </li>
   </ul>
 </nav>
 
+
 </header>
+
+<!-- Gallery Section -->
+<div id="gallery" class="page" style="display:none;">
+  <h2>Resources</h2>
+  <div style="display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin: 20px 0;">
+    <!-- Image 1 with hardcoded details -->
+    <div class="photo-container" style="position: relative; width: 200px; text-align: center; background-color: #f8f8f8; border-radius: 10px; padding: 10px; display: flex; flex-direction: column; justify-content: space-between; height: 320px;">
+      <img src="https://i.imgur.com/jixmLF9.jpeg" alt="Rasm" class="logo-img" style="width: 100%; height: 150px; object-fit: cover;" onclick="openModal('https://i.imgur.com/jixmLF9.jpeg', 'Photo 1', 'Grade 1', 'Term 1', 'Math', 'Algebra', 'Linear Equations')">
+      <div class="photo-details" style="margin-top: 10px; font-size: 14px;">
+        <p style="margin: 2px 0; color: #2c3e50;">Title: Lesson Loan</p>
+        <p style="margin: 2px 0; color: #3498db;">Grade: 1</p>
+        <p style="margin: 2px 0; color: #e74c3c;">Term: 1</p>
+        <p style="margin: 2px 0; color: #2ecc71;">Subject: Math</p>
+        <p style="margin: 2px 0; color: #f39c12;">Strand: Algebra</p>
+        <p style="margin: 2px 0; color: #9b59b6;">Substrand: Linear Equations</p>
+      </div>
+      <button class="buy-button" onclick="openModal('https://i.imgur.com/jixmLF9.jpeg', 'Photo 1', 'Grade 1', 'Term 1', 'Math', 'Algebra', 'Linear Equations')" style="background-color: #4CAF50; color: white; border: none; padding: 10px 20px; border-radius: 5px; margin-top: auto;">
+        Buy Now
+      </button>
+    </div>
+
+    <!-- Image 2 with hardcoded details -->
+    <div class="photo-container" style="position: relative; width: 200px; text-align: center; background-color: #f8f8f8; border-radius: 10px; padding: 10px; display: flex; flex-direction: column; justify-content: space-between; height: 320px;">
+      <img src="https://i.imgur.com/bbHniIi.jpeg" alt="Rasm" class="logo-img" style="width: 100%; height: 150px; object-fit: cover;" onclick="openModal('https://i.imgur.com/bbHniIi.jpeg', 'Photo 2', 'Grade 2', 'Term 2', 'Science', 'Physics', 'Forces')">
+      <div class="photo-details" style="margin-top: 10px; font-size: 14px;">
+        <p style="margin: 2px 0; color: #2c3e50;">Title: Lesson Loan</p>
+        <p style="margin: 2px 0; color: #3498db;">Grade: 2</p>
+        <p style="margin: 2px 0; color: #e74c3c;">Term: 2</p>
+        <p style="margin: 2px 0; color: #2ecc71;">Subject: Science</p>
+        <p style="margin: 2px 0; color: #f39c12;">Strand: Physics</p>
+        <p style="margin: 2px 0; color: #9b59b6;">Substrand: Forces</p>
+      </div>
+      <button class="buy-button" onclick="openModal('https://i.imgur.com/bbHniIi.jpeg', 'Photo 2', 'Grade 2', 'Term 2', 'Science', 'Physics', 'Forces')" style="background-color: #4CAF50; color: white; border: none; padding: 10px 20px; border-radius: 5px; margin-top: auto;">
+        Buy Now
+      </button>
+    </div>
+
+    <!-- Add more images with hardcoded details as needed -->
+  </div>
+</div>
+
+<!-- Modal for Full Image View -->
+<div id="imageModal" style="display:none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; justify-content: center; align-items: center;">
+  <div style="position: relative; text-align: center;">
+    <img id="modalImage" src="" alt="Full Image" style="max-width: 40%; max-height: 40%; border-radius: 10px;">
+    
+    <!-- Display image details -->
+    <div id="imageDetails" style="margin-top: 20px; color: #fff;">
+      <p id="imageTitle" style="color: #2c3e50;"></p>
+      <p id="imageGrade" style="color: #3498db;"></p>
+      <p id="imageTerm" style="color: #e74c3c;"></p>
+      <p id="imageSubject" style="color: #2ecc71;"></p>
+      <p id="imageStrand" style="color: #f39c12;"></p>
+      <p id="imageSubstrand" style="color: #9b59b6;"></p>
+    </div>
+
+    <button onclick="closeModal()" style="position: absolute; top: 10px; right: 10px; background-color: #ff6347; color: white; border: none; padding: 10px; border-radius: 50%;">X</button>
+    
+    <!-- Buy Now Button inside the Modal -->
+    <div id="buyNowButton" style="margin-top: 20px; display: block;">
+      <button onclick="showPaymentModalFor('photo', 25, 'image123', 'Photo 1')" style="padding: 10px 20px; background-color: #4CAF50; color: white; border: none; border-radius: 5px; font-size: 16px;">
+        Pay Ksh 25 to Buy
+      </button>
+    </div>
+
+    <!-- Download Button (Initially Hidden) -->
+    <div id="downloadButton" style="margin-top: 20px; display: none;">
+      <a href="" id="downloadLink" download>
+        <button style="padding: 10px 20px; background-color: #2196F3; color: white; border: none; border-radius: 5px; font-size: 16px;">
+          Download Image
+        </button>
+      </a>
+    </div>
+  </div>
+</div>
 <!-- ✅ How to Use the System Section -->
 <div id="usageHelp" class="page" style="display:none; padding: 20px;">
   <h2 style="color:#2196f3; text-align:center;">📘 How to Use the System</h2>
@@ -1540,32 +1662,7 @@ nav ul li {
   <img src="https://i.imgur.com/jixmLF9.jpeg" alt="Rasm" class="logo-img" style="width: 200px;">
   <img src="https://i.imgur.com/bbHniIi.jpeg" alt="Rasm" class="logo-img" style="width: 200px;">
   <img src="https://i.imgur.com/qnmK7CR.jpeg" alt="Rasm" class="logo-img" style="width: 200px;">
-  <img src="https://i.imgur.com/WKwJ73A.jpeg" alt="Rasm" class="logo-img" style="width: 200px;">
-  <img src="https://i.imgur.com/4pi7IZ6.jpeg" alt="Rasm" class="logo-img" style="width: 200px;">
-  <img src="https://i.imgur.com/iqBwsWm.png" alt="Rasm" class="logo-img" style="width: 200px;">
-  <img src="https://i.imgur.com/jgwKwKd.jpeg" alt="Rasm" class="logo-img" style="width: 200px;">
-  <img src="https://i.imgur.com/1anjN0C.jpeg" alt="Rasm" class="logo-img" style="width: 200px;">
-  <img src="https://i.imgur.com/J7NB5je.jpeg" alt="Rasm" class="logo-img" style="width: 200px;">
-  <img src="https://i.imgur.com/JYLKJ2p.jpeg" alt="Rasm" class="logo-img" style="width: 200px;">
-  <img src="https://i.imgur.com/HBsmybQ.jpeg" alt="Rasm" class="logo-img" style="width: 200px;">
- 
-  <img src="https://i.imgur.com/aYh8gq9.jpeg" alt="Rasm" class="logo-img" style="width: 200px;">
-  <img src="https://i.imgur.com/JXrL3JD.jpeg" alt="Rasm" class="logo-img" style="width: 200px;">
-  <img src="https://i.imgur.com/kkjlixE.jpeg" alt="Rasm" class="logo-img" style="width: 200px;">
-  <img src="https://i.imgur.com/fAtmMt4.jpeg" alt="Rasm" class="logo-img" style="width: 200px;">
-  <img src="https://i.imgur.com/7aWGYXS.jpeg" alt="Rasm" class="logo-img" style="width: 200px;">
-  <img src="https://i.imgur.com/5v3tav5.jpeg" alt="Rasm" class="logo-img" style="width: 200px;">
-  <img src="https://i.imgur.com/kEyIuZJ.jpeg" alt="Rasm" class="logo-img" style="width: 200px;">
-  <img src="https://i.imgur.com/1BJtGew.jpeg" alt="Rasm" class="logo-img" style="width: 200px;">
-  <img src="https://i.imgur.com/WYA3tbh.jpeg" alt="Rasm" class="logo-img" style="width: 200px;">
-  <img src="https://i.imgur.com/LFHI6v8.jpeg" alt="Rasm" class="logo-img" style="width: 200px;">
-  <img src="https://i.imgur.com/95vSNbW.jpeg" alt="Rasm" class="logo-img" style="width: 200px;">
-  <img src="https://i.imgur.com/WFVirtF.jpeg" alt="Rasm" class="logo-img" style="width: 200px;">
-  <img src="https://i.imgur.com/R7D2ECX.jpeg" alt="Rasm" class="logo-img" style="width: 200px;">
-  <img src="https://i.imgur.com/RuNhIix.jpeg" alt="Rasm" class="logo-img" style="width: 200px;">
-  <img src="https://i.imgur.com/uOQZLxF.jpeg" alt="Rasm" class="logo-img" style="width: 200px;">
-  <img src="https://i.imgur.com/buIgbl2.jpeg" alt="Rasm" class="logo-img" style="width: 200px;">
-  <img src="https://i.imgur.com/vtJXjeb.jpeg" alt="Rasm" class="logo-img" style="width: 200px;">
+
 </div>
 <!-- Open Graph Meta Tags for social sharing -->
 <meta property="og:title" content="Teacher Swaps Kenya" />
@@ -5357,233 +5454,159 @@ function attachMarketFormSubmit() {
   newForm.addEventListener("submit", submitMarketHandler);
 }
 async function loadMarketItems() {
-const container = document.getElementById("marketContainer");
-container.innerHTML = "";
+  const container = document.getElementById("marketContainer");
+  container.innerHTML = "";
 
-const minPrice = parseInt(document.getElementById("filterMinPrice").value) || 0;
-const maxPrice = parseInt(document.getElementById("filterMaxPrice").value) || Infinity;
-const categoryFilter = document.getElementById("filterItemCategory").value.toLowerCase().trim();
-const countyFilter = document.getElementById("filterItemCounty").value.toLowerCase().trim();
+  // Read filter values
+  const minPrice = parseInt(document.getElementById("filterMinPrice").value) || 0;
+  const maxPrice = parseInt(document.getElementById("filterMaxPrice").value) || Infinity;
+  const categoryFilter = document.getElementById("filterCategory").value.toLowerCase().trim();
+  const countyFilter = document.getElementById("filterCounty").value.toLowerCase().trim();
 
-try {
-  const snapshot = await marketRef.get();
-  if (snapshot.empty) {
-    container.innerHTML = "<p>No items posted yet.</p>";
-    return;
-  }
-
-  const now = new Date();
-  const boostedItems = [], normalItems = [];
-
-  snapshot.forEach(doc => {
-    const d = doc.data();
-    const id = doc.id;
-    const price = parseFloat(d.price) || 0;
-
-    if (price < minPrice || price > maxPrice) return;
-    if (categoryFilter && (!d.category || !d.category.toLowerCase().includes(categoryFilter))) return;
-    if (countyFilter && (!d.county || !d.county.toLowerCase().includes(countyFilter))) return;
-
-    const isBoosted = d.boosted && d.boostExpiry?.toDate?.() > now;
-    const item = { ...d, id };
-
-    if (isBoosted) {
-      boostedItems.push(item);
-      trendingBoostedItems.push({
-        title: d.name || "Item",
-        description: `${d.category} – ${d.county}`,
-        phone: d.phone,
-        type: "market"
-      });
-    } else {
-      normalItems.push(item);
-    }
-  });
-
-  boostedItems.sort((a, b) => (b.timestamp?.toDate?.() || 0) - (a.timestamp?.toDate?.() || 0));
-  normalItems.sort((a, b) => (b.timestamp?.toDate?.() || 0) - (a.timestamp?.toDate?.() || 0));
-
-  const allItems = [...boostedItems, ...normalItems];
-  if (allItems.length === 0) {
-    container.innerHTML = "<p>No items match your filters.</p>";
-    return;
-  }
-
-  allItems.forEach(async (d) => {
-    const id = d.id;
-    const isPoster = currentUser && currentUser.uid === d.postedBy;
-    const isVerified = !!d.postedBy;
-    const isBoosted = d.boosted && d.boostExpiry?.toDate?.() > new Date();
-    const canDelete = isPoster || isAdmin;
-    const canBoost = isPoster || isAdmin;
-
-    const card = document.createElement("div");
-    card.className = "market-card";
-    card.id = `market-${id}`;
-    card.dataset.category = d.category || "";
-    card.dataset.county = d.county || "";
-    if (isBoosted) card.dataset.boosted = "true";
-    card.style.position = "relative";
-
-    const verifiedBadge = isVerified
-      ? `<span class="verified-badge"><i class="fas fa-check-circle"></i> Verified</span>` : "";
-    const boostBadge = isBoosted
-      ? `<span style="color:#ff5722; font-weight:bold; font-size:0.85em; margin-left:6px;">🔥 Boosted</span>` : "";
-
-    // Create star rating container dynamically
-    const starsContainer = document.createElement("div");
-    starsContainer.className = "stars-container";
-    for (let i = 1; i <= 5; i++) {
-      const star = document.createElement("span");
-      star.className = "star";
-      star.dataset.rating = i;
-      star.innerHTML = "&#9733;"; // Star symbol
-      starsContainer.appendChild(star);
+  try {
+    const snapshot = await marketRef.get();
+    if (snapshot.empty) {
+      container.innerHTML = "<p>No items posted yet.</p>";
+      return;
     }
 
-    // Add rating functionality for each star
-    starsContainer.addEventListener("click", async (e) => {
-      const rating = parseInt(e.target.getAttribute("data-rating"));
-      if (!rating || isNaN(rating)) return;
+    const boostedItems = [], normalItems = [], now = new Date();
 
-      const user = firebase.auth().currentUser;
-      if (!user) return showCustomAlert("🔐 You must be logged in to rate items.", "info");
+    snapshot.forEach(doc => {
+      const d = doc.data();
+      const id = doc.id;
 
-      const ratingRef = db.collection("marketItems").doc(id).collection("ratings").doc(user.uid);
-      await ratingRef.set({
-        rating,
-        ratedBy: user.uid,
-        ratedAt: firebase.firestore.FieldValue.serverTimestamp()
-      });
+      // Apply filters:
+      const price = parseFloat(d.price) || 0;
+      if (price < minPrice || price > maxPrice) return;
+      if (categoryFilter && (!d.category || !d.category.toLowerCase().includes(categoryFilter))) return;
+      if (countyFilter && (!d.county || !d.county.toLowerCase().includes(countyFilter))) return;
 
-      // Update the selected stars
-      starsContainer.querySelectorAll(".star").forEach((star) => {
-        if (parseInt(star.dataset.rating) <= rating) {
-          star.style.color = "gold";
-        } else {
-          star.style.color = "#ddd";
-        }
-      });
-
-      updateAverageRating(id); // Recalculate average after rating
-      showCustomAlert(`✅ Thanks for rating this item ${rating} star${rating == 1 ? "" : "s"}!`, "success");
+      const isBoosted = d.boosted && d.boostExpiry?.toDate?.() > now;
+      const item = { ...d, id };
+      (isBoosted ? boostedItems : normalItems).push(item);
     });
 
-    // Create Average Rating display
-    const avgRatingElement = document.createElement("p");
-    avgRatingElement.id = `avgRating-${id}`;
-    avgRatingElement.style.color = "#ff9800"; // Style for the average rating
-    avgRatingElement.textContent = "⭐ Loading average..."; // Temporary text until rating is fetched
+    // If no match:
+    if (boostedItems.length + normalItems.length === 0) {
+      container.innerHTML = "<p>No items match your filters.</p>";
+      return;
+    }
 
-    card.innerHTML = `
-      ${verifiedBadge}
-      <h3 style="margin-bottom:6px; color:#2e7d32;">
-        ${d.posterName || "Seller"} ${boostBadge}
-      </h3>
-      ${d.photoURL
-        ? `<img src="${d.photoURL}" style="width:100%;height:180px;object-fit:cover;border-radius:8px;margin-bottom:8px;">`
-        : ""}
-      <p style="color:#4caf50;">📦 <strong>Item:</strong> ${d.name || "-"}</p>
-      <p style="color:#e91e63;">🏷️ <strong>Category:</strong> ${d.category || "-"}</p>
-      <p style="color:#ff9800;">💰 <strong>Price:</strong> KES ${d.price ? parseInt(d.price).toLocaleString() : "N/A"}</p>
-      <p style="color:#3f51b5;">📍 <strong>Location:</strong> ${d.county || "-"}</p>
-      <div style="margin-top:8px;">
-        <a href="tel:${d.phone}" style="color:green;">📞 Call</a> |
-        <a href="https://wa.me/254${d.phone?.replace(/^0/, '')}" target="_blank" style="color:#25D366;">💬 WhatsApp</a>
-      </div>
+    // Render boosted first
+    [...boostedItems, ...normalItems].forEach(d => {
+      const id = d.id;
+      const isPoster = currentUser && currentUser.uid === d.postedBy;
+      const isVerified = d.postedBy;
+      const isBoosted = d.boosted && d.boostExpiry?.toDate?.() > new Date();
+      const canDelete = isPoster || isAdmin;
+      const canBoost = isPoster || isAdmin;
 
-      <!-- Rating Stars -->
-      <div style="margin-top:10px;">
-        ${starsContainer.outerHTML}
-      </div>
+      const card = document.createElement("div");
+      card.className = "market-card";
+      card.id = `market-${id}`;
+      card.dataset.category = d.category || "";
+      card.dataset.county = d.county || "";
+      if (isBoosted) card.dataset.boosted = "true";
+      card.style.position = "relative";
 
-      <!-- Average Rating -->
-      <div style="margin-top:10px;">
-        ${avgRatingElement.outerHTML}
-      </div>
+      const verifiedBadge = isVerified
+        ? `<span class="verified-badge"><i class="fas fa-check-circle"></i> Verified</span>`
+        : "";
 
-      ${(!isPoster && !isAdmin) ? `  
-        <!-- ❤️ Show Interest -->
-        <div style="margin-top:10px;">
-          <button onclick="showMarketInterest('${id}')" 
-            style="background:#f44336;color:#fff;border:none;border-radius:5px;padding:6px 12px;cursor:pointer;">
-            ❤️ Show Interest <span id="marketInterestCount-${id}">0</span>
-          </button>
-        </div>` : ""}
+      const boostBadge = isBoosted
+        ? `<span style="color:#ff5722; font-weight:bold; font-size:0.85em; margin-left:6px;">🔥 Boosted</span>`
+        : "";
 
-      ${(!isPoster || isAdmin) ? `  
-        <!-- 🚩 Report -->
-        <div style="margin-top:10px;">
-          <button onclick="reportMarketItem('${id}')" 
-            style="background:#ff1744;color:#fff;border:none;border-radius:5px;padding:6px 12px;cursor:pointer;">
-            🚩 Report
-          </button>
-        </div>` : ""}
+      card.innerHTML = `
+        ${verifiedBadge}
+        <h3 style="margin-bottom:6px; color:#2e7d32;">
+          ${d.posterName || "Unknown Seller"} ${boostBadge}
+        </h3>
+        ${d.photoURL
+          ? `<img src="${d.photoURL}" style="width:100%;height:180px;object-fit:cover;border-radius:8px;margin-bottom:8px;">`
+          : ""}
+        <p style="color:#4caf50;">📦 <strong>Item name:</strong> ${d.name || "-"}</p>
+        <p style="color:#2196f3;">📝 <strong>Status:</strong> ${d.description || "-"}</p>
+        <p style="color:#e91e63;">🏷️ <strong>Category:</strong> ${d.category || "-"}</p>
+        <p style="color:#ff9800;">💰 <strong>Price:</strong> KES ${d.price ? parseInt(d.price).toLocaleString() : "N/A"}</p>
+        <p style="color:#9c27b0;">🧰 <strong>Condition:</strong> ${d.condition || "New"}</p>
+        <p style="color:#3f51b5;">📍 <strong>Location:</strong> ${d.county || "Unknown"}, ${d.subcounty || "Unknown"}</p>
+        <div class="rating" data-id="${id}" style="margin:6px 0;">
+          <span class="avg-rating" id="avgRating-${id}">⭐ No ratings yet (0)</span><br>
+          ${[1, 2, 3, 4, 5].map(star => `
+            <i class="fas fa-star" onclick="rateService('${id}',${star})"
+               style="cursor:pointer;color:#ccc;" id="star-${id}-${star}"></i>
+          `).join('')}
+        </div>
+        <div style="margin-top:8px;">
+          <a href="tel:${d.phone}" style="color:green;">📞 Call</a> |
+          <a href="https://wa.me/254${d.phone?.replace(/^0/, '')}" target="_blank" style="color:#25D366;">💬 WhatsApp</a>
+        </div>
+        
+        <!-- New Buttons Section -->
+        ${(!isPoster && !isAdmin) ? `  
+          <!-- Show Interest Button -->
+          <div style="margin-top:10px;">
+            <button onclick="showMarketInterest('${id}')" 
+              style="background:#f44336;color:#fff;border:none;border-radius:5px;padding:6px 12px;cursor:pointer;">
+              ❤️ Show Interest <span id="marketInterestCount-${id}">0</span>
+            </button>
+          </div>` : ""}
 
-      ${(!isPoster && !isAdmin) ? `  
-        <!-- 💬 Chat -->
-        <div style="margin-top:10px;">
-          <button onclick="openChatModal('${d.phone}','${d.posterName || "Seller"}')" 
-            style="background:#673ab7;color:#fff;border:none;border-radius:5px;padding:6px 12px;cursor:pointer;">
-            💬 Chat
-          </button>
-        </div>` : ""}
+        ${(!isPoster && !isAdmin) ? `  
+          <!-- Report Item Button -->
+          <div style="margin-top:10px;">
+            <button onclick="reportMarketItem('${id}')" 
+              style="background:#ff1744;color:#fff;border:none;border-radius:5px;padding:6px 12px;cursor:pointer;">
+              🚩 Report Item
+            </button>
+          </div>` : ""}
 
-      <!-- 💾 Save Item -->
-      ${(!isPoster && !isAdmin) ? `  
-        <div style="margin-top:10px;">
-          <button onclick="saveMarketItem('${id}')" 
-            style="background:#2196f3;color:#fff;border:none;border-radius:5px;padding:6px 12px;cursor:pointer;">
-            💾 Save Item
-          </button>
-        </div>` : ""}
+        ${(!isPoster && !isAdmin) ? `  
+          <!-- Chat Button -->
+          <div style="margin-top:10px;">
+            <button onclick="openChatModal('${d.phone}','${d.posterName || "Seller"}')" 
+              style="background:#673ab7;color:#fff;border:none;border-radius:5px;padding:6px 12px;cursor:pointer;">
+              💬 Chat
+            </button>
+          </div>` : ""}
 
-      ${canDelete || canBoost ? `  
-        <!-- 🗑️ Delete + 🚀 Boost -->
-        <div style="margin-top:10px;">
-          <button onclick="deleteMarketItem('${id}')" 
-            style="background:#dc3545;color:#fff;border:none;border-radius:5px;padding:6px 12px;cursor:pointer;">
-            🗑️ Delete
-          </button>
-          ${canBoost && !isBoosted ? `
-            <button onclick="boostMarketItemFree('${id}')" 
-              style="background:#ff9800;color:#fff;border:none;border-radius:5px;padding:6px 12px;margin-left:8px;cursor:pointer;">
-              🚀 Boost
-            </button>` : ""}
-        </div>` : ""}
+        ${isPoster ? `  
+          <!-- Mark as Sold Out Button -->
+          <div style="margin-top:10px;">
+            <button id="soldOutBtn-${id}" onclick="toggleSoldStatus('${id}')" 
+              style="background:#9e9e9e;color:#fff;border:none;border-radius:5px;padding:6px 12px;cursor:pointer;">
+              ${d.isSold ? "❌ Sold Out" : "✅ Mark as Sold"}
+            </button>
+          </div>` : ""}
+        
+        <!-- Delete and Boost options for Admins or the Poster -->
+        ${canDelete || canBoost ? `  
+          <!-- 🗑️ Delete + 🚀 Boost -->
+          <div style="margin-top:10px;">
+            <button onclick="deleteMarketItem('${id}')" 
+              style="background:#dc3545;color:#fff;border:none;border-radius:5px;padding:6px 12px;cursor:pointer;">
+              🗑️ Delete
+            </button>
+            ${canBoost && !isBoosted ? `
+              <button onclick="boostMarketItemFree('${id}')" 
+                style="background:#ff9800;color:#fff;border:none;border-radius:5px;padding:6px 12px;margin-left:8px;cursor:pointer;">
+                🚀 Boost
+              </button>` : ""}
+          </div>` : ""}
+      `;
 
-      ${isPoster ? `  
-        <!-- ✅ Mark as Sold -->
-        <div style="margin-top:10px;">
-          <button id="soldOutBtn-${id}" onclick="toggleSoldStatus('${id}')" 
-            style="background:#9e9e9e;color:#fff;border:none;border-radius:5px;padding:6px 12px;cursor:pointer;">
-            ${d.isSold ? "❌ Sold Out" : "✅ Mark as Sold"}
-          </button>
-        </div>` : ""}
-
-      <!-- Edit Button -->
-      ${canDelete ? `  
-        <div style="margin-top:10px;">
-          <button onclick="openEditForm('${id}')" 
-            style="background:#4caf50;color:#fff;border:none;border-radius:5px;padding:6px 12px;cursor:pointer;">
-            ✏️ Edit Item
-          </button>
-        </div>` : ""}
-    `;
-
-    container.appendChild(card);
-    updateAverageRating(id); // Recalculate average after rating
-  });
-
-  renderTrendingSection();
-
-} catch (err) {
-  console.error("❌ Error loading market items:", err);
-  showCustomAlert("❌ Failed to load items: " + err.message, "error");
+      container.appendChild(card);
+      updateAverageRating(id); // Recalculate average after rating
+    });
+  } catch (err) {
+    console.error("❌ Error loading market items:", err);
+    showCustomAlert("❌ Failed to load items: " + err.message, "error");
+  }
 }
 
 
-}
 // Function to open the edit form and render the item data
 async function openEditForm(itemId) {
   const itemRef = db.collection("marketItems").doc(itemId);
@@ -5646,171 +5669,49 @@ async function saveItemChanges(itemId) {
     showCustomAlert("❌ Failed to update item. Try again later.", "error");
   }
 }
-
-async function saveMarketItem(itemId) {
+// Function to show interest in an item (only once per user)
+async function showMarketInterest(itemId) {
   const user = firebase.auth().currentUser;
-  if (!user) return showCustomAlert("🔐 You must be logged in to save items.", "info");
 
-  try {
-    const savedRef = db.collection("users").doc(user.uid).collection("savedItems").doc(itemId);
-    const doc = await savedRef.get();
-
-    if (doc.exists) {
-      return showCustomAlert("💾 You've already saved this item.", "info");
-    }
-
-    await savedRef.set({
-      itemId,
-      savedAt: firebase.firestore.FieldValue.serverTimestamp()
-    });
-
-    showCustomAlert("✅ Item saved successfully!", "success");
-  } catch (err) {
-    console.error("❌ Error saving item:", err);
-    showCustomAlert("❌ Failed to save item. Please try again.", "error");
-  }
-}
-async function rateMarketItem(itemId) {
-  const user = firebase.auth().currentUser;
-  if (!user) return showCustomAlert("🔐 You must be logged in to rate items.", "info");
-
-  // Get all stars
-  const stars = document.querySelectorAll("#starRatingContainer .star");
-
-  let selectedRating = null;
-
-  // Add click event listeners to each star
-  stars.forEach(star => {
-    star.addEventListener("click", () => {
-      selectedRating = parseInt(star.getAttribute("data-rating"));
-      // Highlight selected stars
-      stars.forEach(star => {
-        if (parseInt(star.getAttribute("data-rating")) <= selectedRating) {
-          star.classList.add("selected");
-        } else {
-          star.classList.remove("selected");
-        }
-      });
-    });
-  });
-
-  if (selectedRating === null) {
-    return showCustomAlert("⚠️ Please select a rating by clicking on the stars.", "warning");
-  }
-
-  try {
-    const ratingRef = db.collection("marketItems").doc(itemId).collection("ratings").doc(user.uid);
-
-    await ratingRef.set({
-      rating: selectedRating,
-      ratedBy: user.uid,
-      ratedAt: firebase.firestore.FieldValue.serverTimestamp()
-    });
-
-    showCustomAlert(`✅ Thanks for rating this item ${selectedRating} star${selectedRating === 1 ? "" : "s"}!`, "success");
-    updateAverageRating(itemId); // Recalculate average after rating
-  } catch (err) {
-    console.error("❌ Failed to rate item:", err);
-    showCustomAlert("❌ Could not save your rating. Try again later.", "error");
-  }
-}
-
-async function viewSavedItems() {
-  const container = document.getElementById("marketContainer");
-  container.innerHTML = "<p>Loading your saved items...</p>";
-
-  const user = firebase.auth().currentUser;
+  // Ensure the user is logged in
   if (!user) {
-    container.innerHTML = "<p>🔐 Please log in to view saved items.</p>";
+    showCustomAlert("🔐 You need to be logged in to show interest.", "info");
     return;
   }
 
-  try {
-    const savedSnap = await db.collection("users").doc(user.uid).collection("savedItems").get();
-    if (savedSnap.empty) {
-      container.innerHTML = "<p>📭 You haven't saved any items yet.</p>";
-      return;
-    }
-
-    const savedItemIds = savedSnap.docs.map(doc => doc.id);
-    const itemFetches = savedItemIds.map(id => db.collection("marketItems").doc(id).get());
-    const itemDocs = await Promise.all(itemFetches);
-
-    container.innerHTML = "<h3>💾 Your Saved Items</h3>";
-    itemDocs.forEach(doc => {
-      if (!doc.exists) return;
-
-      const d = doc.data();
-      const id = doc.id;
-      const card = document.createElement("div");
-      card.className = "market-card";
-      card.id = `saved-${id}`;
-
-      card.innerHTML = `
-        <h3 style="color:#2e7d32;">${d.name || "Item"} (${d.category})</h3>
-        ${d.photoURL ? `<img src="${d.photoURL}" style="width:100%;height:180px;object-fit:cover;border-radius:8px;">` : ""}
-        <p style="color:#ff9800;"><strong>Price:</strong> KES ${d.price ? parseInt(d.price).toLocaleString() : "N/A"}</p>
-        <p><strong>County:</strong> ${d.county}</p>
-        <p><strong>Posted by:</strong> ${d.posterName || "Seller"}</p>
-        <div style="margin-top:8px;">
-          <a href="tel:${d.phone}" style="color:green;">📞 Call</a> |
-          <a href="https://wa.me/254${d.phone?.replace(/^0/, '')}" target="_blank" style="color:#25D366;">💬 WhatsApp</a>
-        </div>
-        <div style="margin-top:10px;">
-          <button onclick="removeSavedItem('${id}')" 
-            style="background:#f44336;color:#fff;border:none;border-radius:5px;padding:6px 12px;cursor:pointer;">
-            ❌ Remove from Saved
-          </button>
-        </div>
-      `;
-
-      container.appendChild(card);
-    });
-
-  } catch (err) {
-    console.error("❌ Failed to load saved items:", err);
-    container.innerHTML = "<p>❌ Error loading saved items. Try again later.</p>";
-  }
-}
-async function removeSavedItem(itemId) {
-  const user = firebase.auth().currentUser;
-  if (!user) return showCustomAlert("You must be logged in.", "info");
-
-  try {
-    await db.collection("users").doc(user.uid).collection("savedItems").doc(itemId).delete();
-    showCustomAlert("❌ Item removed from your saved list.", "success");
-    document.getElementById(`saved-${itemId}`)?.remove();
-  } catch (err) {
-    console.error("❌ Failed to remove saved item:", err);
-    showCustomAlert("❌ Could not remove item. Try again.", "error");
-  }
-}
-
-async function showMarketInterest(itemId) {
-  const user = firebase.auth().currentUser;
-  if (!user) return showCustomAlert("🚫 You must be logged in to show interest.", "error");
-
+  // Check if the user has already shown interest in this item
   const interestRef = db.collection("marketItems").doc(itemId).collection("interests").doc(user.uid);
+  const interestDoc = await interestRef.get();
 
+  if (interestDoc.exists) {
+    showCustomAlert("❌ You have already shown interest in this item.", "info");
+    return; // Exit the function if interest has already been recorded
+  }
+
+  // If the user has not shown interest, record the interest
+  const interestCountElement = document.getElementById(`marketInterestCount-${itemId}`);
+  
+  if (interestCountElement) {
+    let interestCount = parseInt(interestCountElement.innerText) || 0;
+    interestCount += 1;
+    interestCountElement.innerText = interestCount;
+  }
+
+  // Store the interest in Firestore
   try {
-    const doc = await interestRef.get();
-    if (doc.exists) {
-      return showCustomAlert("⚠️ You have already shown interest in this item.", "warning");
-    }
-
     await interestRef.set({
-      name: user.displayName || user.email,
-      uid: user.uid,
+      userId: user.uid,
       timestamp: firebase.firestore.FieldValue.serverTimestamp()
     });
 
-    updateMarketInterestCount(itemId);
-    showCustomAlert("✅ Interest shown successfully. The seller may contact you.", "success");
+    showCustomAlert("✅ Your interest has been recorded!", "success");
   } catch (err) {
-    console.error("❌ Failed to show interest:", err);
-    showCustomAlert("❌ Could not register interest. Please try again.", "error");
+    console.error("Error recording interest:", err);
+    showCustomAlert("❌ Failed to record your interest. Please try again later.", "error");
   }
 }
+
+
 
 async function viewInterestedUsers(itemId) {
   const user = firebase.auth().currentUser;
@@ -5827,10 +5728,24 @@ async function viewInterestedUsers(itemId) {
   if (interestSnap.empty) return showCustomAlert("ℹ️ No one has shown interest yet.", "info");
 
   const names = [];
-  interestSnap.forEach(doc => names.push(doc.data().name || "Unknown"));
+  // Loop through each interested user
+  for (const doc of interestSnap.docs) {
+    const userId = doc.id;  // Assuming the document ID is the user ID
+    try {
+      // Fetch the user's details from the 'users' collection
+      const userSnap = await db.collection("users").doc(userId).get();
+      const userName = userSnap.exists ? userSnap.data().name || "Unknown" : "Unknown";
+      names.push(userName);
+    } catch (err) {
+      console.error("Error fetching user details:", err);
+      names.push("Unknown User");
+    }
+  }
 
+  // Display the list of interested users
   showCustomAlert("❤️ Interested Users:\n\n" + names.join("\n"), "info");
 }
+
 async function reportMarketItem(itemId) {
   showReportConfirmModal(async () => {
     const user = firebase.auth().currentUser;
@@ -7342,6 +7257,106 @@ async function loadTrendingItems() {
 
   foundItems.forEach(card => trendingContainer.appendChild(card));
 }
+ let currentPhotoName = ''; // To store the name or ID of the photo
+  let currentImageSrc = ''; // To store the source of the image for download
+
+  // Function to open the modal and display the clicked image with its details
+  function openModal(imageSrc, photoName, grade, term, subject, strand, substrand) {
+    document.getElementById('imageModal').style.display = 'flex'; // Show the modal
+    document.getElementById('modalImage').src = imageSrc; // Set the image source to clicked image
+    currentPhotoName = photoName; // Store the photo name or ID for the purchase
+    currentImageSrc = imageSrc; // Store the image source for download
+
+    // Display the details for the image in the modal
+    document.getElementById('imageTitle').innerText = 'Title: ' + photoName;
+    document.getElementById('imageGrade').innerText = 'Grade: ' + grade;
+    document.getElementById('imageTerm').innerText = 'Term: ' + term;
+    document.getElementById('imageSubject').innerText = 'Subject: ' + subject;
+    document.getElementById('imageStrand').innerText = 'Strand: ' + strand;
+    document.getElementById('imageSubstrand').innerText = 'Substrand: ' + substrand;
+
+    document.getElementById('buyNowButton').style.display = 'block'; // Show the Buy Now button inside the modal
+    document.getElementById('downloadButton').style.display = 'none'; // Hide the Download button until after payment
+  }
+
+  // Function to close the modal
+  function closeModal() {
+    document.getElementById('imageModal').style.display = 'none'; // Hide the modal
+  }
+
+  // Function to show the payment modal for image purchase
+  function showPaymentModalFor(type, amount, itemId, itemName) {
+    const modalHTML = `
+      <div id="universalPayModal" class="modal" style="display:block; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:9999;">
+        <div class="modal-content" style="margin:10% auto; padding:20px; background:#f9f9ff; border:2px solid #4CAF50; width:80%; max-width:400px; border-radius:10px; text-align:center; box-shadow: 0 0 10px rgba(0,0,0,0.3);">
+          <h3 style="color:#2c3e50;">Pay to Unlock: <span style="color:#4CAF50;">${itemName}</span></h3>
+          <p style="font-size:16px;">Amount: <strong style="color:#388e3c;">Ksh ${amount}</strong></p>
+          <input type="tel" id="universalPhone" placeholder="Enter your MPESA number (e.g. 0712345678)"
+                 style="padding: 10px; width:100%; margin-bottom:10px; border:1px solid #ccc; border-radius:6px;" />
+          <button onclick="initiateStkPayment('${type}', ${amount}, '${itemId}', '${itemName}')"
+                  style="background:#4CAF50; color:white; border:none; padding:10px 20px; border-radius:6px; font-weight:bold;">
+            📲 Pay with MPESA
+          </button>
+          <br/>
+          <button onclick="closeUniversalModal()" 
+                  style="margin-top:10px; background:#e53935; color:white; border:none; padding:8px 16px; border-radius:6px;">
+            ❌ Cancel
+          </button>
+          <p id="universalPaymentStatus" style="margin-top:10px; color:#555;"></p>
+        </div>
+      </div>
+    `;
+    document.body.insertAdjacentHTML("beforeend", modalHTML);
+  }
+
+  // Function to close the universal payment modal
+  function closeUniversalModal() {
+    const modal = document.getElementById("universalPayModal");
+    if (modal) modal.remove();
+  }
+
+  // ✅ Unified STK Push Handler with unlock logic
+  async function initiateStkPayment(type, amount, itemId, itemName) {
+    const phone = document.getElementById("universalPhone").value.trim();
+    const statusEl = document.getElementById("universalPaymentStatus");
+
+    if (!/^07\d{8}$/.test(phone)) {
+      statusEl.innerText = "⚠️ Please enter a valid Safaricom number";
+      return;
+    }
+
+    statusEl.innerText = "⏳ Sending STK Push...";
+
+    try {
+      const response = await fetch("http://localhost:3000/stkpush", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          phone,
+          amount,
+          accountReference: type,
+          itemId,
+          itemName,
+          userId: currentUser?.uid || "anonymous"
+        })
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        statusEl.innerText = "✅ STK Push sent. Please complete payment on your phone.";
+        
+        // After successful payment, allow the user to download the image
+        document.getElementById('downloadButton').style.display = 'block';
+        document.getElementById('downloadLink').href = currentImageSrc; // Set the download link to the image source
+        closeUniversalModal();
+      } else {
+        statusEl.innerText = `❌ Error: ${data.errorMessage || "Unknown failure"}`;
+      }
+    } catch (err) {
+      statusEl.innerText = "❌ Network error: " + err.message;
+    }
+  }
 
 </script>
 
