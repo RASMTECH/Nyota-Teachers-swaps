@@ -754,7 +754,7 @@
 }
 #soulmateContainer {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); /* Increased min-width for larger cards */
   gap: 20px;
   padding: 20px;
   box-sizing: border-box;
@@ -767,19 +767,68 @@ body {
   overflow-y: scroll;
 }
 
-
 .soulmate-card {
- scroll-snap-align: start;
+  scroll-snap-align: start;
   padding: 20px;
   background: #f0f8ff; /* Light blue background */
   border: 1px solid #ccc;
   border-radius: 10px;
   min-height: 200px;
-  width: 100%; /* ✅ Makes it fill available grid column */
-  box-sizing: border-box; /* ✅ Includes padding in width */
+  width: 100%; /* Makes it fill available grid column */
+  box-sizing: border-box; /* Includes padding in width */
   box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.1);
   transition: transform 0.2s ease; /* Optional: smooth hover effect */
 }
+
+@media (max-width: 768px) {
+  /* Adjust the layout for mobile */
+  #soulmateContainer {
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); /* Ensures smaller screens still look good */
+  }
+
+  .soulmate-card {
+    padding: 15px; /* Slightly reduced padding for mobile */
+  }
+}
+/* Style for headers */
+header h1 {
+  color: white;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1.5rem;
+  padding: 10px 20px;
+  border: 2px solid #4CAF50; /* Green border */
+  border-radius: 10px; /* Rounded corners */
+  margin: 10px 0;
+  background-color: rgba(0, 0, 0, 0.2); /* Semi-transparent background */
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2); /* Shadow for depth */
+}
+
+/* Apply border to other headers, like h2 */
+h2 {
+  color: #2196f3;
+  padding: 8px 15px;
+  border: 2px solid #2196f3; /* Blue border */
+  border-radius: 8px;
+  margin-bottom: 15px;
+  background-color: #f1f8ff; /* Light background for contrast */
+}
+
+/* For smaller screens, adjust the header for better visibility */
+@media (max-width: 768px) {
+  header h1 {
+    font-size: 1.2rem; /* Slightly smaller font size */
+    padding: 8px 15px; /* Adjust padding for mobile */
+  }
+
+  h2 {
+    font-size: 1.1rem;
+    padding: 6px 12px; /* Adjust padding for smaller screens */
+  }
+}
+
 
 .verified-badge {
   position: absolute;
@@ -1603,7 +1652,7 @@ nav ul li {
     
     <!-- Buy Now Button inside the Modal -->
     <div id="buyNowButton" style="margin-top: 20px; display: block;">
-      <button onclick="showPaymentModalFor('photo', 25, 'image123', 'Photo 1')" style="padding: 10px 20px; background-color: #4CAF50; color: white; border: none; border-radius: 5px; font-size: 16px;">
+      <button onclick="showPaymentModalFor('photo', 25, 'image123', 'Lesson-plan ')" style="padding: 10px 20px; background-color: #4CAF50; color: white; border: none; border-radius: 5px; font-size: 16px;">
         Pay Ksh 25 to Buy
       </button>
     </div>
