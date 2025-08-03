@@ -1489,12 +1489,67 @@ nav ul li {
 
 </header>
 
+
 <!-- Gallery Section -->
 <div id="gallery" class="page" style="display:none;">
+<!-- Filter Options -->
+<div id="filterOptions" style="display: flex; justify-content: center; gap: 20px; margin: 20px 0;">
+  <select id="filterGrade" onchange="filterGallery()">
+    <option value="">Select Grade</option>
+    <option value="Grade 1">Grade 1</option>
+    <option value="Grade 2">Grade 2</option>
+    <option value="Grade 3">Grade 3</option>
+    <option value="Grade 4">Grade 4</option>
+    <option value="Grade 5">Grade 5</option>
+    <option value="Grade 6">Grade 6</option>
+    <option value="Grade 7">Grade 7</option>
+    <option value="Grade 8">Grade 8</option>
+    <option value="Grade 9">Grade 9</option>
+    <option value="Grade 10">Grade 10</option>
+    <option value="Grade 11">Grade 11</option>
+    <option value="Grade 12">Grade 12</option>
+  </select>
+
+  <select id="filterSubject" onchange="filterGallery()">
+    <option value="">Select Subject</option>
+    <option value="Math">Math</option>
+    <option value="Science">Science</option>
+    <option value="English">English</option>
+    <option value="Kiswahili">Kiswahili</option>
+    <option value="History">History</option>
+    <option value="Geography">Geography</option>
+    <option value="Biology">Biology</option>
+    <option value="Chemistry">Chemistry</option>
+    <option value="Physics">Physics</option>
+    <option value="CRE">CRE</option>
+    <option value="PPI">PPI</option>
+    <option value="Agriculture">Agriculture</option>
+    <option value="Computer Science">Computer Science</option>
+    <option value="Music">Music</option>
+    <option value="Physical Education">Physical Education</option>
+    <option value="Fine Arts">Fine Arts</option>
+    <option value="Business Studies">Business Studies</option>
+    <option value="Home Science">Home Science</option>
+    <option value="Art & Design">Art & Design</option>
+    <option value="Sports & Recreation">Sports & Recreation</option>
+    <option value="Foreign Languages">Foreign Languages</option>
+    <option value="Theatre & Film">Theatre & Film</option>
+    <option value="Creative Arts">Creative Arts</option>
+    <option value="Social Studies">Social Studies</option> <!-- Added Subject -->
+    <option value="Pretechnical Studies">Pretechnical Studies</option> <!-- Added Subject -->
+  </select>
+
+  <select id="filterTerm" onchange="filterGallery()">
+    <option value="">Select Term</option>
+    <option value="Term 1">Term 1</option>
+    <option value="Term 2">Term 2</option>
+    <option value="Term 3">Term 3</option>
+  </select>
+</div>
   <h2>Resources</h2>
-  <div style="display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin: 20px 0;">
+  <div id="photoContainer" style="display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin: 20px 0;">
     <!-- Image 1 with hardcoded details -->
-    <div class="photo-container" style="position: relative; width: 200px; text-align: center; background-color: #f8f8f8; border-radius: 10px; padding: 10px; display: flex; flex-direction: column; justify-content: space-between; height: 320px;">
+    <div class="photo-container" data-grade="Grade 1" data-subject="Math" data-term="Term 1" style="position: relative; width: 200px; text-align: center; background-color: #f8f8f8; border-radius: 10px; padding: 10px; display: flex; flex-direction: column; justify-content: space-between; height: 320px;">
       <img src="https://i.imgur.com/jixmLF9.jpeg" alt="Rasm" class="logo-img" style="width: 100%; height: 150px; object-fit: cover;" onclick="openModal('https://i.imgur.com/jixmLF9.jpeg', 'Photo 1', 'Grade 1', 'Term 1', 'Math', 'Algebra', 'Linear Equations')">
       <div class="photo-details" style="margin-top: 10px; font-size: 14px;">
         <p style="margin: 2px 0; color: #2c3e50;">Title: Lesson Loan</p>
@@ -1510,7 +1565,7 @@ nav ul li {
     </div>
 
     <!-- Image 2 with hardcoded details -->
-    <div class="photo-container" style="position: relative; width: 200px; text-align: center; background-color: #f8f8f8; border-radius: 10px; padding: 10px; display: flex; flex-direction: column; justify-content: space-between; height: 320px;">
+    <div class="photo-container" data-grade="Grade 2" data-subject="Science" data-term="Term 2" style="position: relative; width: 200px; text-align: center; background-color: #f8f8f8; border-radius: 10px; padding: 10px; display: flex; flex-direction: column; justify-content: space-between; height: 320px;">
       <img src="https://i.imgur.com/bbHniIi.jpeg" alt="Rasm" class="logo-img" style="width: 100%; height: 150px; object-fit: cover;" onclick="openModal('https://i.imgur.com/bbHniIi.jpeg', 'Photo 2', 'Grade 2', 'Term 2', 'Science', 'Physics', 'Forces')">
       <div class="photo-details" style="margin-top: 10px; font-size: 14px;">
         <p style="margin: 2px 0; color: #2c3e50;">Title: Lesson Loan</p>
@@ -1553,7 +1608,7 @@ nav ul li {
       </button>
     </div>
 
-    <!-- Download Button (Initially Hidden) -->
+    <!-- Download Button (Initially Hidden) for Admin -->
     <div id="downloadButton" style="margin-top: 20px; display: none;">
       <a href="" id="downloadLink" download>
         <button style="padding: 10px 20px; background-color: #2196F3; color: white; border: none; border-radius: 5px; font-size: 16px;">
@@ -1561,8 +1616,15 @@ nav ul li {
         </button>
       </a>
     </div>
+
+    <!-- Download Button for Admin -->
+    <div id="adminDownloadButton" style="margin-top: 20px; display: none;">
+      <button onclick="downloadImageForAdmin()" style="padding: 10px 20px; background-color: #2196F3; color: white; border: none; border-radius: 5px; font-size: 16px;">
+        Download Image for Free
+      </button>
+    </div>
   </div>
-</div>
+  </div>
 <!-- ✅ How to Use the System Section -->
 <div id="usageHelp" class="page" style="display:none; padding: 20px;">
   <h2 style="color:#2196f3; text-align:center;">📘 How to Use the System</h2>
@@ -1638,9 +1700,12 @@ nav ul li {
   </div>
 </div>
 <section id="trendingSection" style="display: none; padding: 16px;">
-  <h2 style="color: #ff5722; margin-bottom: 16px;">🔥 Trending Now</h2>
-  <div id="trendingContainer" style="display: flex; flex-wrap: wrap; gap: 16px;"></div>
+  <h2 style="color: #ff5722; margin-bottom: 16px; text-align: center;">🔥 Trending Now</h2>
+  <div id="trendingContainer" style="display: flex; flex-wrap: wrap; gap: 16px; justify-content: center; align-items: center; width: 100%;">
+    <!-- Trending items (cards) will appear here -->
+  </div>
 </section>
+
 </div>
 </div>
   <main id="content">
@@ -3198,10 +3263,7 @@ if (missing) {
       showCustomAlert("Error saving swap: " + err.message, "error");
     }
 }
-
-
-let trendingBoostedSwaps = [];
-async function loadSwaps() { 
+async function loadSwaps() {
   const container = document.querySelector("#swapCardContainer");
   container.innerHTML = "";
   trendingBoostedSwaps = []; // reset trending list
@@ -3241,6 +3303,7 @@ async function loadSwaps() {
       });
     }
 
+    // Sort swaps to show boosted ones first
     const orderedSwaps = [...boostedSwaps, ...normalSwaps];
 
     for (const s of orderedSwaps) {
@@ -3297,9 +3360,21 @@ async function loadSwaps() {
       card.setAttribute("data-hardship", s.hardship || "-");
       card.setAttribute("data-subject", (s.subjectCombination || "-").toLowerCase());
 
-      // Swap Closed Button for the poster
+      // Boost Button for the poster or admin
+      const boostButton = `
+        <div style="margin-top:10px;">
+          ${isPoster || isAdminUser ? `
+            <button id="boostSwapBtn-${s.id}" onclick="boostSwap('${s.id}')"
+              style="background:#ff9800;color:white;border:none;border-radius:5px;padding:6px 12px;cursor:pointer;">
+              🚀 Boost Swap ${isAdminUser ? "(Free)" : "(Ksh 250)"}
+            </button>
+          ` : ""}
+        </div>
+      `;
+
+      // Swap Closed Button for the poster or admin
       const closedButton = `
-        ${isPoster ? `
+        ${isPoster || isAdminUser ? `
           <div style="margin-top:10px;">
             <button id="closeSwapBtn-${s.id}" onclick="closeSwap('${s.id}')"
               style="background:#e53935;color:white;border:none;border-radius:5px;padding:6px 12px;cursor:pointer;">
@@ -3309,16 +3384,20 @@ async function loadSwaps() {
         ` : ""}
       `;
 
-      // Boost Button for the poster
-      const boostButton = `
-        ${isPoster && !s.isClosed && !s.isBoosted ? `
-          <div style="margin-top:10px;">
-            <button id="boostSwapBtn-${s.id}" onclick="showPaymentModalFor('boost', 250, '${s.id}', 'Boost Swap')"
-              style="background:#ff9800;color:white;border:none;border-radius:5px;padding:6px 12px;cursor:pointer;">
-              🚀 Boost Swap (Ksh 250)
-            </button>
-          </div>
+      // Delete Button for admins only
+      const deleteButton = `
+        ${isAdminUser ? `
+          <button onclick="deleteSwap('${s.id}')"
+            style="background:#e53935;color:white;padding:4px 8px;border:none;border-radius:4px;">🗑️ Delete</button>
         ` : ""}
+      `;
+
+      // Show Interest Button (Visible to all users)
+      const interestButton = `
+        <button onclick="sendSwapInterest('${s.id}', '${s.teacherName}')"
+          style="background:#1976d2;color:white;border:none;padding:4px 8px;border-radius:4px;flex-grow:1;">
+          💌 Show Interest
+        </button>
       `;
 
       card.innerHTML = `
@@ -3343,17 +3422,15 @@ async function loadSwaps() {
         </div>
 
         <div style="margin-top:10px; display:flex; flex-wrap:wrap; gap:8px;">
-          ${isAdminUser ? `
-            <button onclick="deleteSwap('${s.id}')" style="background:#e53935;color:white;padding:4px 8px;border:none;border-radius:4px;">🗑️ Delete</button>
-            ${vipBtn}
-          ` : ""}
-          <button onclick="sendSwapInterest('${s.id}', '${s.teacherName}')" style="background:#1976d2;color:white;border:none;padding:4px 8px;border-radius:4px;flex-grow:1;">💌 Show Interest</button>
+          ${deleteButton}  <!-- Only visible to Admin -->
+          ${vipBtn}        <!-- Only visible to Admin in hot counties -->
+          ${interestButton} <!-- Visible to all users -->
         </div>
 
         ${closedButton} <!-- Swap Closed Button -->
-        ${boostButton} <!-- Boost Swap Button -->
+        ${boostButton}  <!-- Boost Swap Button -->
       `;
-
+      
       container.appendChild(card);
       updateAverageRating(s.id);
     }
@@ -3366,6 +3443,8 @@ async function loadSwaps() {
     showCustomAlert("Error loading swaps: " + err.message, "error");
   }
 }
+
+
 
 // Function to close the swap
 async function closeSwap(swapId) {
@@ -3384,8 +3463,40 @@ async function closeSwap(swapId) {
 
 // Function to boost the swap
 async function boostSwap(swapId) {
-  // Show the payment modal for boosting
-  showPaymentModalFor('boost', 250, swapId, 'Boost Swap');
+  const currentUser = firebase.auth().currentUser;
+
+  if (!currentUser) {
+    showCustomAlert("You must be logged in to boost swaps.", "error");
+    return;
+  }
+
+  // Check if the current user is an admin
+  const isAdminUser = isAdmin === true;
+
+  if (isAdminUser) {
+    // Admins boost the swap for free
+    await updateSwapBoostStatus(swapId, true);
+    showCustomAlert("✅ The swap has been boosted for free!", "success");
+  } else {
+    // Show the payment modal for boosting (non-admin)
+    showPaymentModalFor('boost', 250, swapId, 'Boost Swap');
+  }
+}
+
+// Helper function to update the swap boost status in Firestore
+async function updateSwapBoostStatus(swapId, isBoosted) {
+  const swapRef = db.collection("teacherSwaps").doc(swapId);
+  await swapRef.update({
+    boosted: isBoosted,
+    boostExpiry: isBoosted ? firebase.firestore.Timestamp.fromDate(new Date()) : null
+  });
+
+  // Optionally, update UI or notify user of success
+  const boostButton = document.getElementById(`boostSwapBtn-${swapId}`);
+  if (boostButton) {
+    boostButton.innerText = "🚀 Boosted (Free)";
+    boostButton.disabled = true;
+  }
 }
 
 // ✅ Trending section renderer (add below loadSwaps)
@@ -3399,18 +3510,8 @@ function renderTrendingSectionFromSwapsOnly() {
     container.innerHTML = "<p style='text-align:center;'>No trending swaps at the moment.</p>";
     return;
   }
-
-  trendingBoostedSwaps.forEach(item => {
-    const card = document.createElement("div");
-    card.className = "job-card";
-    card.innerHTML = `
-      <h3>🔥 ${item.title}</h3>
-      <p>${item.description}</p>
-      <p><strong>Phone:</strong> ${item.phone}</p>
-    `;
-    container.appendChild(card);
-  });
 }
+
 
 async function sendSwapInterest(swapId, teacherName) {
   const currentUser = firebase.auth().currentUser;
@@ -3514,11 +3615,10 @@ let bomJobsCache = [];
 let jobToDeleteId = null;
 let trendingBoostedItems = []; // Combined trending (jobs, swaps, etc.)
 
-// ✅ Load BOM Jobs with Boost Logic and Trending Integration
+// ✅ Load BOM Jobs with Boost Logic (No Trending Integration)
 async function loadBOMJobs() {
   const container = document.getElementById("jobContainer");
   container.innerHTML = "";
-  trendingBoostedItems = trendingBoostedItems.filter(item => item.type !== "job"); // Reset job items only
 
   try {
     const snapshot = await bomRef.orderBy("timestamp", "desc").get();
@@ -3536,74 +3636,17 @@ async function loadBOMJobs() {
 
       const job = { id: doc.id, ...data, isBoosted, boostExpiry };
       bomJobsCache.push(job);
-
-      if (isBoosted) {
-        trendingBoostedItems.push({
-          title: job.jobType,
-          description: `${job.organization} – ${job.county}`,
-          phone: job.phone,
-          type: "job"
-        });
-      }
     }
 
     console.log("✅ Loaded BOM Jobs:", bomJobsCache);
-    renderBOMJobs(bomJobsCache);
-    renderTrendingSection(); // ✅ Show all trending
+    renderBOMJobs(bomJobsCache); // ✅ Render only BOM Jobs (without trending section)
 
   } catch (err) {
     showCustomAlert("❌ Failed to load jobs: " + err.message, "error");
   }
 }
 
-// ✅ Render Trending Section
-function renderTrendingSection() {
-  const container = document.getElementById("trendingContainer");
-  if (!container) return;
-  container.innerHTML = "";
-
-  if (!trendingBoostedItems.length) {
-    container.innerHTML = "<p style='text-align:center;'>No trending items found right now.</p>";
-    return;
-  }
-
-  trendingBoostedItems.forEach(item => {
-    const card = document.createElement("div");
-    card.className = "trending-card";
-    card.style.cssText = `
-      position: relative;
-      border: 1px solid #ddd;
-      border-radius: 12px;
-      overflow: hidden;
-      margin-bottom: 18px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.08);
-      background: #fff;
-      text-align: center;
-    `;
-
-    const title = item.title || "No title available";
-    const description = item.description || "No description available";
-    const phone = item.phone ? `<p style="color:#009688;"><strong>Phone:</strong> ${item.phone}</p>` : "";
-
-    // Trending Badge
-    const badge = `
-      <div style="position:absolute; top:8px; right:8px; background:orange; color:white; padding:2px 6px; font-size:12px; border-radius:4px;">
-        🔥 Trending
-      </div>
-    `;
-
-    card.innerHTML = `
-      ${badge}
-      <h3 style="margin-top:0; color:#2c3e50;">${title}</h3>
-      <p style="margin:4px 0; color:#555;">${description}</p>
-      ${phone}
-    `;
-
-    container.appendChild(card);
-  });
-}
-
-// ✅ Render BOM Jobs (unchanged from the original)
+// ✅ Render BOM Jobs (with Boost Logic and Trending Integration)
 function renderBOMJobs(jobs) {
   const container = document.getElementById("jobContainer");
   container.innerHTML = "";
@@ -3772,6 +3815,7 @@ function renderBOMJobs(jobs) {
 }
 
 
+
 async function closeJob(jobId) {
   try {
     await db.collection("bomJobs").doc(jobId).update({
@@ -3801,68 +3845,6 @@ async function boostJobFree(jobId) {
     console.error("❌ Error boosting job:", error);
     showCustomAlert("❌ Failed to boost job: " + error.message, "error");
   }
-}
-function renderTrendingSection() {
-  const container = document.getElementById("trendingContainer");
-  if (!container) return;
-  container.innerHTML = "";
-
-  if (!trendingBoostedItems.length) {
-    container.innerHTML = "<p style='text-align:center; color: #333;'>No trending items found right now.</p>";
-    return;
-  }
-
-  // Center the container and apply flexbox
-  container.style.display = "flex";
-  container.style.flexWrap = "wrap";
-  container.style.justifyContent = "center";
-  container.style.padding = "20px";
-
-  trendingBoostedItems.forEach(item => {
-    const card = document.createElement("div");
-    card.className = "trending-card";
-    card.style.cssText = `
-      position: relative;
-      border-radius: 12px;
-      overflow: hidden;
-      margin: 15px;
-      width: 280px; /* Control the width of each card */
-      background: #f5f5dc; /* Creamy White Background */
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
-      text-align: center;
-      padding: 20px;
-      color: #333; /* Default text color */
-    `;
-
-    // Safeguard against undefined fields
-    const title = item.title || "No title available";
-    const description = item.description || "No description available";
-    const phone = item.phone ? `<p style="color:#009688; font-weight: bold;"><strong>Phone:</strong> ${item.phone}</p>` : "";
-    const location = item.location || "Location not specified";
-    const salaryRange = item.salaryRange ? `KES ${parseInt(item.salaryRange).toLocaleString()}` : "Salary not specified";
-    const datePosted = item.datePosted || "Date not specified";
-    const postedBy = item.postedBy || "Posted by Unknown";
-
-    // Trending Badge
-    const badge = `
-      <div style="position:absolute; top:8px; right:8px; background:orange; color:white; padding:2px 6px; font-size:12px; border-radius:4px; font-weight: bold;">
-        🔥 Trending
-      </div>
-    `;
-
-    card.innerHTML = `
-      ${badge}
-      <h3 style="margin-top:0; color:#2c3e50; font-weight: bold;">${title}</h3>
-      <p style="margin:10px 0; color:#555; font-weight: bold;">${description}</p>
-      ${phone}
-      <p style="color:#ff6347; font-weight: bold;"><strong>Location:</strong> ${location}</p>
-      <p style="color:#e74c3c; font-weight: bold;"><strong>Salary Range:</strong> ${salaryRange}</p>  <!-- Red color applied here -->
-      <p style="color:#2ecc71; font-weight: bold;"><strong>Date Posted:</strong> ${datePosted}</p>
-      <p style="color:#f39c12; font-weight: bold;"><strong>Posted By:</strong> ${postedBy}</p>
-    `;
-
-    container.appendChild(card);
-  });
 }
 
 
@@ -5076,11 +5058,7 @@ async function loadServices() {
           <a href="tel:${d.phone}" style="color:green;">📞 Call</a>
         </p>
         <p style="color:#25D366;"><strong>${whatsappIcon}
-          <a href="https://wa.me/254${d.phone.replace(/^0/, '')}" target="_blank">💬 WhatsApp</a></strong></p>
-        <button onclick="openChatModal('${d.phone}', '${d.name}')"
-          style="margin-top:6px; background:#673ab7; color:white; border:none; border-radius:4px; padding:6px 12px; cursor:pointer;">
-          💬 Chat
-        </button>`
+          <a href="https://wa.me/254${d.phone.replace(/^0/, '')}" target="_blank">💬 WhatsApp</a></strong></p>`
       : `
         <div class="blurred">
           <p style="color:gray;">🔒 Contacts Locked – Pay Ksh 200 to Unlock</p>
@@ -5105,6 +5083,14 @@ async function loadServices() {
           style="background:#dc3545; color:white; padding:6px 12px; margin-top:6px; border:none; border-radius:6px;">
           🗑️ Delete
         </button>` : "";
+
+    // Chat Button: Only visible to users who are NOT the poster
+    const chatButtonHTML = !isPoster
+      ? `<button onclick="openChatModal('${d.phone}', '${d.name}')"
+          style="margin-top:6px; background:#673ab7; color:white; border:none; border-radius:4px; padding:6px 12px; cursor:pointer;">
+          💬 Chat
+        </button>`
+      : "";
 
     const card = document.createElement("div");
     card.className = "service-card";
@@ -5134,6 +5120,7 @@ async function loadServices() {
         ${contactHTML}
         ${boostButtonHTML}
         ${deleteButtonHTML}
+        ${chatButtonHTML}
       </div>`;
 
     container.appendChild(card);
@@ -5145,6 +5132,9 @@ async function loadServices() {
     updateAverageRating(id);
   }
 }
+
+
+
 
 async function boostServiceDirectly(serviceId) {
   try {
@@ -5369,90 +5359,6 @@ function filterServices() {
   }
 }
 
-// ✅ Global Submit Handler for Market Form with monetization check
-async function submitMarketHandler(e) {
-  e.preventDefault();
-
-  if (!isLoggedIn || !currentUser) {
-    showPage("login");
-    return alert("You must be logged in.");
-  }
-
-  // ✅ Check if user already posted one or more market items
-  const marketSnap = await marketRef.where("postedBy", "==", currentUser.uid).get();
-  const totalPosted = marketSnap.size;
-
-  if (totalPosted >= 1 && !isAdmin) {
-    showPaymentModalFor("market", 300, currentUser.uid, "Post Extra Market Item");
-    return;
-  }
-
-  // ✅ Collect form values
-  const itemName = document.getElementById("itemName").value.trim();
-  const itemCategory = document.getElementById("itemCategory").value;
-  const itemDescription = document.getElementById("itemDescription").value.trim();
-  const itemPrice = document.getElementById("itemPrice").value.trim();
-  const itemCounty = document.getElementById("itemCounty").value;
-  const itemSubcounty = document.getElementById("itemSubcounty").value.trim();
-  const itemPhone = document.getElementById("itemPhone").value.trim();
-  const itemPhotoFile = document.getElementById("itemPhoto").files[0];
-
-  const itemConditionInput = document.getElementById("itemCondition");
-  const itemCondition = itemConditionInput ? itemConditionInput.value : "New";
-
-  const posterName = currentUser.displayName || currentUser.email || "Anonymous";
-
-  const itemData = {
-    name: itemName,
-    category: itemCategory,
-    description: itemDescription,
-    price: itemPrice,
-    county: itemCounty,
-    subcounty: itemSubcounty,
-    phone: itemPhone,
-    postedBy: currentUser.uid,
-    posterName: posterName,
-    condition: itemCondition,
-    timestamp: firebase.firestore.FieldValue.serverTimestamp()
-  };
-
-  try {
-    // ✅ Upload photo if selected
-    if (itemPhotoFile) {
-      const photoPath = `marketPhotos/${Date.now()}_${itemPhotoFile.name}`;
-      const photoSnap = await storage.ref(photoPath).put(itemPhotoFile);
-      itemData.photoURL = await photoSnap.ref.getDownloadURL();
-    }
-
-    // ✅ Save to Firestore
-    await marketRef.add(itemData);
-    showCustomAlert("✅ Item posted!", "success");
-    document.getElementById("marketForm").reset();
-    loadMarketItems();
-
-    // ✅ Notify Admin
-    await db.collection("adminNotifications").add({
-      type: "Marketplace Post",
-      message: `New item posted: ${itemName} (${itemCategory}), Price: ${itemPrice}, Phone: ${itemPhone}, County: ${itemCounty}`,
-      timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-      read: false
-    });
-
-  } catch (err) {
-    showCustomAlert("❌ Error: " + err.message, "error");
-  }
-}
-
-
-// ✅ Attach Market Form Handler (safe and reusable)
-function attachMarketFormSubmit() {
-  const oldForm = document.getElementById("marketForm");
-  if (!oldForm) return;
-
-  const newForm = oldForm.cloneNode(true);
-  oldForm.parentNode.replaceChild(newForm, oldForm);
-  newForm.addEventListener("submit", submitMarketHandler);
-}
 async function loadMarketItems() {
   const container = document.getElementById("marketContainer");
   container.innerHTML = "";
@@ -5483,8 +5389,14 @@ async function loadMarketItems() {
       if (countyFilter && (!d.county || !d.county.toLowerCase().includes(countyFilter))) return;
 
       const isBoosted = d.boosted && d.boostExpiry?.toDate?.() > now;
-      const item = { ...d, id };
-      (isBoosted ? boostedItems : normalItems).push(item);
+      const isExpired = d.boostExpiry?.toDate?.() <= now;
+
+      // Only add boosted items to boostedItems array if the boost hasn't expired
+      if (isBoosted) {
+        boostedItems.push({ ...d, id });
+      } else {
+        normalItems.push({ ...d, id, isExpired });
+      }
     });
 
     // If no match:
@@ -5493,12 +5405,12 @@ async function loadMarketItems() {
       return;
     }
 
-    // Render boosted first
+    // Render boosted first, followed by normal items
     [...boostedItems, ...normalItems].forEach(d => {
       const id = d.id;
       const isPoster = currentUser && currentUser.uid === d.postedBy;
-      const isVerified = d.postedBy;
       const isBoosted = d.boosted && d.boostExpiry?.toDate?.() > new Date();
+      const isExpired = d.isExpired;
       const canDelete = isPoster || isAdmin;
       const canBoost = isPoster || isAdmin;
 
@@ -5510,16 +5422,11 @@ async function loadMarketItems() {
       if (isBoosted) card.dataset.boosted = "true";
       card.style.position = "relative";
 
-      const verifiedBadge = isVerified
-        ? `<span class="verified-badge"><i class="fas fa-check-circle"></i> Verified</span>`
-        : "";
-
       const boostBadge = isBoosted
         ? `<span style="color:#ff5722; font-weight:bold; font-size:0.85em; margin-left:6px;">🔥 Boosted</span>`
         : "";
 
       card.innerHTML = `
-        ${verifiedBadge}
         <h3 style="margin-bottom:6px; color:#2e7d32;">
           ${d.posterName || "Unknown Seller"} ${boostBadge}
         </h3>
@@ -5532,18 +5439,10 @@ async function loadMarketItems() {
         <p style="color:#ff9800;">💰 <strong>Price:</strong> KES ${d.price ? parseInt(d.price).toLocaleString() : "N/A"}</p>
         <p style="color:#9c27b0;">🧰 <strong>Condition:</strong> ${d.condition || "New"}</p>
         <p style="color:#3f51b5;">📍 <strong>Location:</strong> ${d.county || "Unknown"}, ${d.subcounty || "Unknown"}</p>
-        <div class="rating" data-id="${id}" style="margin:6px 0;">
-          <span class="avg-rating" id="avgRating-${id}">⭐ No ratings yet (0)</span><br>
-          ${[1, 2, 3, 4, 5].map(star => `
-            <i class="fas fa-star" onclick="rateService('${id}',${star})"
-               style="cursor:pointer;color:#ccc;" id="star-${id}-${star}"></i>
-          `).join('')}
-        </div>
-        <div style="margin-top:8px;">
-          <a href="tel:${d.phone}" style="color:green;">📞 Call</a> |
-          <a href="https://wa.me/254${d.phone?.replace(/^0/, '')}" target="_blank" style="color:#25D366;">💬 WhatsApp</a>
-        </div>
         
+        <!-- New: Phone Number Display -->
+        <p style="color:#673ab7;">📞 <strong>Contact:</strong> ${d.phone || "N/A"}</p> <!-- Added Phone -->
+
         <!-- New Buttons Section -->
         ${(!isPoster && !isAdmin) ? `  
           <!-- Show Interest Button -->
@@ -5580,7 +5479,7 @@ async function loadMarketItems() {
               ${d.isSold ? "❌ Sold Out" : "✅ Mark as Sold"}
             </button>
           </div>` : ""}
-        
+
         <!-- Delete and Boost options for Admins or the Poster -->
         ${canDelete || canBoost ? `  
           <!-- 🗑️ Delete + 🚀 Boost -->
@@ -5590,9 +5489,14 @@ async function loadMarketItems() {
               🗑️ Delete
             </button>
             ${canBoost && !isBoosted ? `
-              <button onclick="boostMarketItemFree('${id}')" 
+              <button onclick="boostMarketItem('${id}')" 
                 style="background:#ff9800;color:#fff;border:none;border-radius:5px;padding:6px 12px;margin-left:8px;cursor:pointer;">
                 🚀 Boost
+              </button>` : ""}
+            ${isPoster && isExpired ? ` 
+              <button onclick="renewBoost('${id}')" 
+                style="background:#ff9800;color:#fff;border:none;border-radius:5px;padding:6px 12px;margin-left:8px;cursor:pointer;">
+                🚀 Renew Boost
               </button>` : ""}
           </div>` : ""}
       `;
@@ -5606,6 +5510,75 @@ async function loadMarketItems() {
   }
 }
 
+
+async function renewBoost(id) {
+  const itemRef = marketRef.doc(id);
+  const doc = await itemRef.get();
+  const itemData = doc.data();
+
+  if (!itemData) {
+    showCustomAlert("❌ Item not found.", "error");
+    return;
+  }
+
+  // Prompt user for payment
+  showPaymentModalFor('renewBoost', 250, id, itemData.name); // Assuming 250 is the cost
+
+  // After payment is complete (we assume you have a payment handler in place):
+  // - Update boost expiry
+  // - Mark the item as boosted again
+  const now = new Date();
+  const boostExpiry = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000); // Add 7 days
+  await itemRef.update({
+    boosted: true,
+    boostExpiry: firebase.firestore.Timestamp.fromDate(boostExpiry)
+  });
+
+  showCustomAlert("✅ Boost renewed successfully!", "success");
+  loadMarketItems(); // Refresh the items list to reflect the change
+}
+
+
+async function boostMarketItem(id) {
+  try {
+    const itemRef = marketRef.doc(id);
+    const doc = await itemRef.get();
+    if (!doc.exists) {
+      return showCustomAlert("❌ Item not found.", "error");
+    }
+
+    const data = doc.data();
+    const postedBy = data.postedBy; // Access postedBy from the Firestore document
+
+    const currentUser = firebase.auth().currentUser;
+    if (!currentUser) {
+      return showCustomAlert("❌ You need to be logged in to boost an item.", "error");
+    }
+
+    // If the current user is the poster, prompt for payment
+    if (currentUser.uid === postedBy) {
+      // Show the payment modal for the poster
+      showPaymentModalFor('boost', 250, id, data.name);
+      return; // Stop the boosting process until payment is completed
+    }
+
+    // For admin or others, boost the item directly (free for admin)
+    const boostExpiry = new Date();
+    boostExpiry.setDate(boostExpiry.getDate() + 7);
+
+    // Update the item to set it as boosted with an expiry date
+    await itemRef.update({
+      boosted: true,
+      boostExpiry: firebase.firestore.Timestamp.fromDate(boostExpiry)
+    });
+
+    showCustomAlert("✅ Item boosted successfully (admin).", "success");
+    loadMarketItems(); // Refresh the list to reflect the change
+  } catch (err) {
+    console.error("❌ Boost error:", err);
+    showCustomAlert("❌ Failed to boost: " + err.message, "error");
+  }
+}
 
 // Function to open the edit form and render the item data
 async function openEditForm(itemId) {
@@ -5669,35 +5642,36 @@ async function saveItemChanges(itemId) {
     showCustomAlert("❌ Failed to update item. Try again later.", "error");
   }
 }
-// Function to show interest in an item (only once per user)
 async function showMarketInterest(itemId) {
   const user = firebase.auth().currentUser;
 
-  // Ensure the user is logged in
   if (!user) {
     showCustomAlert("🔐 You need to be logged in to show interest.", "info");
     return;
   }
 
-  // Check if the user has already shown interest in this item
+  console.log("User is logged in:", user.uid);
+
   const interestRef = db.collection("marketItems").doc(itemId).collection("interests").doc(user.uid);
   const interestDoc = await interestRef.get();
 
   if (interestDoc.exists) {
     showCustomAlert("❌ You have already shown interest in this item.", "info");
-    return; // Exit the function if interest has already been recorded
+    return;
   }
 
-  // If the user has not shown interest, record the interest
+  console.log("User has not shown interest yet.");
+
   const interestCountElement = document.getElementById(`marketInterestCount-${itemId}`);
-  
   if (interestCountElement) {
     let interestCount = parseInt(interestCountElement.innerText) || 0;
     interestCount += 1;
     interestCountElement.innerText = interestCount;
+    console.log("Updated interest count:", interestCount);
+  } else {
+    console.log("Interest count element not found.");
   }
 
-  // Store the interest in Firestore
   try {
     await interestRef.set({
       userId: user.uid,
@@ -5710,6 +5684,7 @@ async function showMarketInterest(itemId) {
     showCustomAlert("❌ Failed to record your interest. Please try again later.", "error");
   }
 }
+
 
 
 
@@ -5855,26 +5830,6 @@ function showCustomAlert(message, type = "info") {
     alertBox.style.transform = "translate(-50%, -50%) scale(0.95)";
     setTimeout(() => alertBox.remove(), 400);
   }, 3500);
-}
-
-
-
-async function boostMarketItemFree(id) {
-  try {
-    const boostExpiry = new Date();
-    boostExpiry.setDate(boostExpiry.getDate() + 7);
-
-    await marketRef.doc(id).update({
-      boosted: true,
-      boostExpiry: firebase.firestore.Timestamp.fromDate(boostExpiry)
-    });
-
-    showCustomAlert("✅ Item boosted successfully (admin).", "success");
-    loadMarketItems();
-  } catch (err) {
-    console.error("❌ Boost error:", err);
-    showCustomAlert("❌ Failed to boost: " + err.message, "error");
-  }
 }
 
 
@@ -7185,6 +7140,8 @@ function deleteMarketItem(id) {
 }
 async function loadTrendingItems() {
   const trendingContainer = document.getElementById("trendingContainer");
+  
+  // Show loading spinner before fetching content
   trendingContainer.innerHTML = `
     <div style="width: 100%; text-align: center; padding: 30px;">
       <i class="fas fa-spinner fa-spin" style="font-size: 36px; color: #ff5722;"></i>
@@ -7192,6 +7149,7 @@ async function loadTrendingItems() {
     </div>
   `;
 
+  // Create an array of async loaders for each section
   const loaders = [];
 
   if (typeof loadSwaps === "function") loaders.push(loadSwaps());
@@ -7200,8 +7158,10 @@ async function loadTrendingItems() {
   if (typeof loadBOMJobs === "function") loaders.push(loadBOMJobs());
   if (typeof loadMarketItems === "function") loaders.push(loadMarketItems());
 
+  // Wait for all sections to load
   await Promise.allSettled(loaders);
 
+  // After loading is complete, continue with the trending section logic
   const allSections = [
     { id: "swapCardContainer", className: "swap-card", label: "Swaps" },
     { id: "jobContainer", className: "job-card", label: "Jobs" },
@@ -7213,6 +7173,7 @@ async function loadTrendingItems() {
 
   let foundItems = [];
 
+  // Loop through each section to find trending items
   allSections.forEach(({ id, className, tag, hasBoostedText, label }) => {
     const container = document.getElementById(id);
     if (!container) return;
@@ -7231,7 +7192,7 @@ async function loadTrendingItems() {
         (hasBoostedText && text.includes("trending"))
       ) {
         const wrapper = document.createElement("div");
-        wrapper.className = "trending-highlight"; // 🎨 Add animation class
+        wrapper.className = "trending-highlight"; // Add animation class
 
         // Add trending label
         const labelTag = document.createElement("div");
@@ -7245,18 +7206,20 @@ async function loadTrendingItems() {
     });
   });
 
-  // 📅 Sort by most recently added (assumes newer elements are later in DOM)
+  // Sort by most recently added (newer elements are later in DOM)
   foundItems.reverse(); // Simple reversal to show newest first
 
-  trendingContainer.innerHTML = "";
-
+  // If no items are found, display message
   if (foundItems.length === 0) {
     trendingContainer.innerHTML = `<p style="text-align:center; color:#999;">No trending items found at the moment.</p>`;
     return;
   }
 
+  // Clear the loading spinner and insert the found trending items
+  trendingContainer.innerHTML = "";
   foundItems.forEach(card => trendingContainer.appendChild(card));
 }
+
  let currentPhotoName = ''; // To store the name or ID of the photo
   let currentImageSrc = ''; // To store the source of the image for download
 
@@ -7357,6 +7320,28 @@ async function loadTrendingItems() {
       statusEl.innerText = "❌ Network error: " + err.message;
     }
   }
+// Filter the gallery based on selected grade, subject, and term
+function filterGallery() {
+  const grade = document.getElementById("filterGrade").value;
+  const subject = document.getElementById("filterSubject").value;
+  const term = document.getElementById("filterTerm").value;
+
+  const photos = document.querySelectorAll(".photo-container");
+
+  photos.forEach(photo => {
+    const photoGrade = photo.getAttribute("data-grade");
+    const photoSubject = photo.getAttribute("data-subject");
+    const photoTerm = photo.getAttribute("data-term");
+
+    if ((grade && photoGrade !== grade) || 
+        (subject && photoSubject !== subject) || 
+        (term && photoTerm !== term)) {
+      photo.style.display = "none";
+    } else {
+      photo.style.display = "flex";
+    }
+  });
+}
 
 </script>
 
