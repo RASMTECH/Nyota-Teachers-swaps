@@ -4901,29 +4901,6 @@ function unlockSoulmateContacts() {
 }
 
 
-
-function boostMarketItem(itemId) {
-  const confirmBoost = confirm("Boost this item for Ksh 100? Your item will be promoted for 7 days.");
-  if (!confirmBoost) return;
-
-  alert("✅ Payment simulated. Boosting now...");
-
-  const boostExpiry = new Date();
-  boostExpiry.setDate(boostExpiry.getDate() + 7);
-
-  marketRef.doc(itemId).update({
-    boosted: true,
-    boostExpiry: firebase.firestore.Timestamp.fromDate(boostExpiry)
-  }).then(() => {
-    showCustomAlert("🚀 Item boosted successfully!", "success");
-    loadMarketItems();
-  }).catch(err => {
-    showCustomAlert("❌ Boost failed: " + err.message, "error");
-  });
-}
-
-
-
 function showSoulmateModal(data) {
   const photo = data.photoURL || 'default.jpg';
 
@@ -5830,7 +5807,6 @@ function attachMarketFormSubmit() {
   oldForm.parentNode.replaceChild(newForm, oldForm);
   newForm.addEventListener("submit", submitMarketHandler);
 }
-
 async function loadMarketItems() {
   const container = document.getElementById("marketContainer");
   container.innerHTML = "";
@@ -5917,11 +5893,11 @@ async function loadMarketItems() {
 
         <!-- New Buttons Section -->
         ${(!isPoster && !isAdmin) ? `  
-          <!-- Show Interest Button -->
+          <!-- Rename Show Interest Button -->
           <div style="margin-top:10px;">
             <button onclick="showMarketInterest('${id}')" 
               style="background:#f44336;color:#fff;border:none;border-radius:5px;padding:6px 12px;cursor:pointer;">
-              ❤️ Show Interest <span id="marketInterestCount-${id}">0</span>
+              💬 Express Interest <span id="marketInterestCount-${id}">${d.interests || 0}</span>
             </button>
           </div>` : ""}
 
@@ -5960,7 +5936,7 @@ async function loadMarketItems() {
               style="background:#dc3545;color:#fff;border:none;border-radius:5px;padding:6px 12px;cursor:pointer;">
               🗑️ Delete
             </button>
-            ${canBoost && !isBoosted ? `
+            ${canBoost && !isBoosted ? ` 
               <button onclick="boostMarketItem('${id}')" 
                 style="background:#ff9800;color:#fff;border:none;border-radius:5px;padding:6px 12px;margin-left:8px;cursor:pointer;">
                 🚀 Boost
@@ -5970,6 +5946,15 @@ async function loadMarketItems() {
                 style="background:#ff9800;color:#fff;border:none;border-radius:5px;padding:6px 12px;margin-left:8px;cursor:pointer;">
                 🚀 Renew Boost
               </button>` : ""}
+          </div>` : ""}
+
+        <!-- Edit Item Button (for poster/admin) -->
+        ${isPoster || isAdmin ? `
+          <div style="margin-top:10px;">
+            <button onclick="openEditForm('${id}')" 
+              style="background:#673ab7;color:#fff;border:none;border-radius:5px;padding:6px 12px;cursor:pointer;">
+              ✏️ Edit Item
+            </button>
           </div>` : ""}
       `;
 
@@ -5981,159 +5966,30 @@ async function loadMarketItems() {
     showCustomAlert("❌ Failed to load items: " + err.message, "error");
   }
 }
-
-
-async function renewBoost(id) {
-  const itemRef = marketRef.doc(id);
-  const doc = await itemRef.get();
-  const itemData = doc.data();
-
-  if (!itemData) {
-    showCustomAlert("❌ Item not found.", "error");
-    return;
-  }
-
-  // Prompt user for payment
-  showPaymentModalFor('renewBoost', 250, id, itemData.name); // Assuming 250 is the cost
-
-  // After payment is complete (we assume you have a payment handler in place):
-  // - Update boost expiry
-  // - Mark the item as boosted again
-  const now = new Date();
-  const boostExpiry = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000); // Add 7 days
-  await itemRef.update({
-    boosted: true,
-    boostExpiry: firebase.firestore.Timestamp.fromDate(boostExpiry)
-  });
-
-  showCustomAlert("✅ Boost renewed successfully!", "success");
-  loadMarketItems(); // Refresh the items list to reflect the change
-}
-
-
-async function boostMarketItem(id) {
-  try {
-    const itemRef = marketRef.doc(id);
-    const doc = await itemRef.get();
-    if (!doc.exists) {
-      return showCustomAlert("❌ Item not found.", "error");
-    }
-
-    const data = doc.data();
-    const postedBy = data.postedBy; // Access postedBy from the Firestore document
-
-    const currentUser = firebase.auth().currentUser;
-    if (!currentUser) {
-      return showCustomAlert("❌ You need to be logged in to boost an item.", "error");
-    }
-
-    // If the current user is the poster, prompt for payment
-    if (currentUser.uid === postedBy) {
-      // Show the payment modal for the poster
-      showPaymentModalFor('boost', 250, id, data.name);
-      return; // Stop the boosting process until payment is completed
-    }
-
-    // For admin or others, boost the item directly (free for admin)
-    const boostExpiry = new Date();
-    boostExpiry.setDate(boostExpiry.getDate() + 7);
-
-    // Update the item to set it as boosted with an expiry date
-    await itemRef.update({
-      boosted: true,
-      boostExpiry: firebase.firestore.Timestamp.fromDate(boostExpiry)
-    });
-
-    showCustomAlert("✅ Item boosted successfully (admin).", "success");
-    loadMarketItems(); // Refresh the list to reflect the change
-  } catch (err) {
-    console.error("❌ Boost error:", err);
-    showCustomAlert("❌ Failed to boost: " + err.message, "error");
-  }
-}
-
-// Function to open the edit form and render the item data
-async function openEditForm(itemId) {
-  const itemRef = db.collection("marketItems").doc(itemId);
-
-  try {
-    const doc = await itemRef.get();
-    if (!doc.exists) {
-      console.error("Item not found");
-      return;
-    }
-
-    const itemData = doc.data();
-
-    // Populate the existing form with item data
-    document.getElementById("itemName").value = itemData.name || '';
-    document.getElementById("itemPrice").value = itemData.price || '';
-    document.getElementById("itemDescription").value = itemData.description || '';
-    document.getElementById("itemCategory").value = itemData.category || '';
-    document.getElementById("itemLocation").value = itemData.county || '';
-
-    // Change the button text to 'Update Item'
-    const submitButton = document.querySelector("#captureMarketItemForm button");
-    submitButton.innerHTML = "Update Item";
-
-    // Add an event listener to handle form submission for saving changes
-    document.getElementById("captureMarketItemForm").onsubmit = function(event) {
-      event.preventDefault(); // Prevent form submission
-      saveItemChanges(itemId); // Save changes
-    };
-
-    console.log('Form is ready to be edited.');
-  } catch (error) {
-    console.error("Error fetching item data:", error);
-  }
-}
-// Function to save edited item details
-async function saveItemChanges(itemId) {
-  // Get updated values from the form
-  const updatedItem = {
-    name: document.getElementById("itemName").value,
-    price: parseFloat(document.getElementById("itemPrice").value),
-    description: document.getElementById("itemDescription").value,
-    category: document.getElementById("itemCategory").value,
-    county: document.getElementById("itemLocation").value,
-  };
-
-  try {
-    // Update the Firestore document with the new values
-    const itemRef = db.collection("marketItems").doc(itemId);
-    await itemRef.update(updatedItem);
-
-    console.log("Item successfully updated!");
-    showCustomAlert("✅ Item updated successfully!", "success");
-
-    // Optionally, refresh the item display (e.g., re-render the item details)
-    loadMarketItems();
-
-  } catch (error) {
-    console.error("Error updating item: ", error);
-    showCustomAlert("❌ Failed to update item. Try again later.", "error");
-  }
-}
 async function showMarketInterest(itemId) {
   const user = firebase.auth().currentUser;
 
+  // Check if the user is logged in
   if (!user) {
-    showCustomAlert("🔐 You need to be logged in to show interest.", "info");
+    showCustomAlert("🔐 You need to be logged in to express interest.", "info");
     return;
   }
 
   console.log("User is logged in:", user.uid);
 
+  // Reference to the "interests" subcollection for the current item
   const interestRef = db.collection("marketItems").doc(itemId).collection("interests").doc(user.uid);
   const interestDoc = await interestRef.get();
 
+  // Check if the user has already shown interest
   if (interestDoc.exists) {
-    showCustomAlert("❌ You have already shown interest in this item.", "info");
+    showCustomAlert("❌ You have already expressed interest in this item.", "info");
     return;
   }
 
   console.log("User has not shown interest yet.");
 
+  // Update interest count in the UI
   const interestCountElement = document.getElementById(`marketInterestCount-${itemId}`);
   if (interestCountElement) {
     let interestCount = parseInt(interestCountElement.innerText) || 0;
@@ -6145,6 +6001,7 @@ async function showMarketInterest(itemId) {
   }
 
   try {
+    // Save the user's interest to Firestore
     await interestRef.set({
       userId: user.uid,
       timestamp: firebase.firestore.FieldValue.serverTimestamp()
@@ -6157,40 +6014,110 @@ async function showMarketInterest(itemId) {
   }
 }
 
+async function openEditForm(itemId) {
+  const itemRef = marketRef.doc(itemId);
 
-
-
-async function viewInterestedUsers(itemId) {
-  const user = firebase.auth().currentUser;
-  if (!user) return showCustomAlert("⚠️ Login required to view interested users.", "warning");
-
-  const itemSnap = await db.collection("marketItems").doc(itemId).get();
-  const itemData = itemSnap.data();
-
-  if (!itemData || itemData.postedBy !== user.uid) {
-    return showCustomAlert("🚫 Only the poster can view interested users.", "error");
-  }
-
-  const interestSnap = await db.collection("marketItems").doc(itemId).collection("interests").get();
-  if (interestSnap.empty) return showCustomAlert("ℹ️ No one has shown interest yet.", "info");
-
-  const names = [];
-  // Loop through each interested user
-  for (const doc of interestSnap.docs) {
-    const userId = doc.id;  // Assuming the document ID is the user ID
-    try {
-      // Fetch the user's details from the 'users' collection
-      const userSnap = await db.collection("users").doc(userId).get();
-      const userName = userSnap.exists ? userSnap.data().name || "Unknown" : "Unknown";
-      names.push(userName);
-    } catch (err) {
-      console.error("Error fetching user details:", err);
-      names.push("Unknown User");
+  try {
+    const doc = await itemRef.get();
+    if (!doc.exists) {
+      console.error("Item not found");
+      return;
     }
+
+    const itemData = doc.data();
+    console.log("Item data fetched:", itemData);
+
+    // Populate the form with the current data
+    document.getElementById("itemName").value = itemData.name || '';
+    document.getElementById("itemPrice").value = itemData.price || '';
+    document.getElementById("itemDescription").value = itemData.description || '';
+    document.getElementById("itemCategory").value = itemData.category || '';
+    document.getElementById("itemLocation").value = itemData.county || '';
+
+    // Change button text to 'Update Item'
+    const submitButton = document.querySelector("#captureMarketItemForm button");
+    submitButton.innerHTML = "Update Item";
+
+    // Handle form submission
+    document.getElementById("captureMarketItemForm").onsubmit = function(event) {
+      event.preventDefault(); // Prevent form submission
+      saveItemChanges(itemId); // Save the changes
+    };
+
+    console.log('Form is ready to be edited.');
+  } catch (error) {
+    console.error("Error fetching item data:", error);
+  }
+}
+
+// Save the changes made in the form
+async function saveItemChanges(itemId) {
+  const updatedItem = {
+    name: document.getElementById("itemName").value,
+    price: parseFloat(document.getElementById("itemPrice").value),
+    description: document.getElementById("itemDescription").value,
+    category: document.getElementById("itemCategory").value,
+    county: document.getElementById("itemLocation").value,
+  };
+
+  console.log("Saving updated item:", updatedItem);
+
+  try {
+    const itemRef = marketRef.doc(itemId);
+    await itemRef.update(updatedItem);
+
+    console.log("Item successfully updated!");
+    showCustomAlert("✅ Item updated successfully!", "success");
+
+    loadMarketItems(); // Refresh the market items to reflect changes
+  } catch (error) {
+    console.error("Error updating item:", error);
+    showCustomAlert("❌ Failed to update item. Try again later.", "error");
+  }
+}
+async function showMarketInterest(itemId) {
+  console.log('Show Interest function triggered for item:', itemId); // Debugging line
+  const user = firebase.auth().currentUser;
+
+  if (!user) {
+    showCustomAlert("🔐 You need to be logged in to express interest.", "info");
+    return;
   }
 
-  // Display the list of interested users
-  showCustomAlert("❤️ Interested Users:\n\n" + names.join("\n"), "info");
+  const interestRef = db.collection("marketItems").doc(itemId).collection("interests").doc(user.uid);
+  console.log('Interest ref:', interestRef); // Debugging Firestore reference
+
+  const interestDoc = await interestRef.get();
+  console.log('Interest document exists:', interestDoc.exists); // Debugging Firestore document existence
+
+  if (interestDoc.exists) {
+    showCustomAlert("❌ You have already expressed interest in this item.", "info");
+    return;
+  }
+
+  // Updating the UI with the new interest count
+  const interestCountElement = document.getElementById(`marketInterestCount-${itemId}`);
+  console.log('Interest count element:', interestCountElement); // Debugging the count element
+
+  if (interestCountElement) {
+    let interestCount = parseInt(interestCountElement.innerText) || 0;
+    interestCount += 1;
+    interestCountElement.innerText = interestCount;
+    console.log("Updated interest count:", interestCount);
+  }
+
+  try {
+    // Save the user's interest to Firestore
+    await interestRef.set({
+      userId: user.uid,
+      timestamp: firebase.firestore.FieldValue.serverTimestamp()
+    });
+
+    showCustomAlert("✅ Your interest has been recorded!", "success");
+  } catch (err) {
+    console.error("Error recording interest:", err);
+    showCustomAlert("❌ Failed to record your interest. Please try again later.", "error");
+  }
 }
 
 async function reportMarketItem(itemId) {
@@ -6304,6 +6231,46 @@ function showCustomAlert(message, type = "info") {
   }, 3500);
 }
 
+async function boostMarketItem(id) {
+  try {
+    const itemRef = marketRef.doc(id);
+    const doc = await itemRef.get();
+    if (!doc.exists) {
+      return showCustomAlert("❌ Item not found.", "error");
+    }
+
+    const data = doc.data();
+    const postedBy = data.postedBy; // Access postedBy from the Firestore document
+
+    const currentUser = firebase.auth().currentUser;
+    if (!currentUser) {
+      return showCustomAlert("❌ You need to be logged in to boost an item.", "error");
+    }
+
+    // If the current user is the poster, prompt for payment
+    if (currentUser.uid === postedBy) {
+      // Show the payment modal for the poster
+      showPaymentModalFor('boost', 250, id, data.name);
+      return; // Stop the boosting process until payment is completed
+    }
+
+    // For admin or others, boost the item directly (free for admin)
+    const boostExpiry = new Date();
+    boostExpiry.setDate(boostExpiry.getDate() + 7);
+
+    // Update the item to set it as boosted with an expiry date
+    await itemRef.update({
+      boosted: true,
+      boostExpiry: firebase.firestore.Timestamp.fromDate(boostExpiry)
+    });
+
+    showCustomAlert("✅ Item boosted successfully (admin).", "success");
+    loadMarketItems(); // Refresh the list to reflect the change
+  } catch (err) {
+    console.error("❌ Boost error:", err);
+    showCustomAlert("❌ Failed to boost: " + err.message, "error");
+  }
+}
 
 // ✅ ADD THIS FUNCTION BELOW
 async function toggleSoldStatus(itemId) {
