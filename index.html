@@ -768,14 +768,14 @@ body {
 }
 
 .soulmate-card {
-  scroll-snap-align: start;
+scroll-snap-align: start;
   padding: 20px;
   background: #f0f8ff; /* Light blue background */
   border: 1px solid #ccc;
   border-radius: 10px;
-  min-height: 200px;
-  width: 100%; /* Makes it fill available grid column */
-  box-sizing: border-box; /* Includes padding in width */
+  min-height: 170px;
+  width: 100%; /* ✅ Makes it fill available grid column */
+  box-sizing: border-box; /* ✅ Includes padding in width */
   box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.1);
   transition: transform 0.2s ease; /* Optional: smooth hover effect */
 }
@@ -4530,11 +4530,8 @@ document.getElementById("soulmateForm").addEventListener("submit", async (e) => 
     showCustomAlert("❌ Error saving profile: " + err.message, "error");
   }
 });
-// LIKE & MATCH functions
-
 // Real-time listener for like changes on the profile
 function listenForLikeChanges(profileId) {
-  // Real-time listener for like changes on the profile
   soulmateRef.doc(profileId).collection("likes").onSnapshot(snapshot => {
     const count = snapshot.size; // The number of likes for this profile
     const likeCountSpan = document.getElementById(`likeCount-${profileId}`);
@@ -4614,16 +4611,18 @@ async function showLikes(profileId) {
   alert(`❤️ Liked by:\n\n${names.join("\n")}`);
 }
 
-// Function to load all soulmate profiles
 async function loadSoulmates() {
   const container = document.querySelector("#soulmateContainer");
   const trendingContainer = document.querySelector("#trendingContainer");
   container.innerHTML = "";
+  if (trendingContainer) trendingContainer.innerHTML = "";
 
   const minAge = parseInt(document.getElementById("filterMinAge")?.value || 0);
   const maxAge = parseInt(document.getElementById("filterMaxAge")?.value || 100);
   const tribeFilter = document.getElementById("filterTribe")?.value.toLowerCase().trim() || "";
   const sexFilter = document.getElementById("filterSex")?.value || "";
+  const sortBy = document.getElementById("sortByLikes")?.value || "recent";
+
   const hasPaid = localStorage.getItem("paidForSoulmates") === "yes";
   const now = new Date();
 
@@ -4674,6 +4673,11 @@ async function loadSoulmates() {
     return (b.timestamp?.toDate?.() || 0) - (a.timestamp?.toDate?.() || 0);
   });
 
+  if (sortedProfiles.length === 0) {
+    container.innerHTML = `<div style="text-align:center;padding:20px;color:#999;">💔 No soulmate profiles found</div>`;
+    return;
+  }
+
   sortedProfiles.forEach(d => {
     const id = d.id;
     const isPoster = currentUser && (d.postedBy === currentUser.uid);
@@ -4683,7 +4687,17 @@ async function loadSoulmates() {
     const card = document.createElement("div");
     card.className = "soulmate-card";
     card.id = `soulmate-${id}`;
-    card.style = `background: #e6f7ff; padding: 14px; border-radius: 8px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); text-align: left; position: relative; min-width: 220px; max-width: 240px; box-sizing: border-box;`;
+    card.style = `
+      background: #e6f7ff;
+      padding: 14px;
+      border-radius: 8px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+      text-align: left;
+      position: relative;
+      min-width: 220px;
+      max-width: 240px;
+      box-sizing: border-box;
+    `;
 
     const contactHTML = `
       <div style="margin:4px 0;">
@@ -4701,10 +4715,12 @@ async function loadSoulmates() {
 
     card.innerHTML = `
       ${d.postedBy ? `<div style="position:absolute;top:8px;right:8px;background:#4caf50;color:white;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:12px;"><i class="fas fa-check"></i></div>` : ""}
+      ${d.isBoosted ? `<div style="position:absolute;top:8px;left:8px;background:#ff9800;color:white;border-radius:4px;padding:2px 8px;font-size:12px;">🔥 Boosted</div>` : ""}
+      ${d.isClosed ? `<div style="position:absolute;bottom:8px;left:8px;background:#f44336;color:white;border-radius:4px;padding:2px 8px;font-size:12px;">🚫 Closed</div>` : ""}
       <div style="margin-top:24px;">
         <i class="fas ${d.sex === 'Male' ? 'fa-user-tie' : 'fa-user-nurse'}" style="font-size:46px; color:${d.sex === 'Male' ? '#3f51b5' : '#e91e63'};"></i>
       </div>
-      <h4 style="margin:0 0 6px;font-size:16px;">${d.name}</h4>
+      <h4 style="margin:0 0 6px;font-size:16px;"><strong>Name:</strong> ${d.name}</h4>
       <p style="margin:0;color:#ff5722;"><strong>Sex:</strong> ${d.sex ? `${d.sex === 'Male' ? '♂️' : '♀️'} ${d.sex}` : '—'}</p>
       <p style="margin:0;"><strong>Location:</strong> <span style="color:#009688;">${d.county || '—'}</span>${d.subCounty ? ` / <span style="color:#6a1b9a;">${d.subCounty}</span>` : ''}</p>
       <p style="margin:0;color:#6a1b9a;"><strong>Tribe:</strong> ${d.tribe || '—'}</p>
@@ -4716,50 +4732,100 @@ async function loadSoulmates() {
         ${hasPaid || isPoster || isAdminUser ? contactHTML : blurredContactHTML}
       </div>
 
-      <div style="display:flex;align-items:center;margin-top:10px;gap:10px;">
+      <div style="margin-top:6px;">
         <button id="likeBtn-${id}" onclick="toggleLike('${id}')" style="background:#e91e63;color:white;border:none;padding:5px 12px;border-radius:50px;cursor:pointer;">
           🤍 Like
         </button>
         <span id="likeCount-${id}" style="margin-left:6px;font-weight:bold; cursor:pointer;" onclick="showLikes('${id}')">${totalLikes} Likes</span>
-      </div>`;
+      </div>
+
+      ${(isPoster || isAdminUser) ? `
+        <div style="margin-top:6px;">
+          <button onclick="deleteSoulmate('${id}')" style="background:#dc3545;color:white;border:none;padding:5px 12px;border-radius:6px;cursor:pointer;">
+            🗑️ Delete
+          </button>
+          <button onclick="boostSoulmate('${id}')" style="background:#ff9800;color:white;border:none;padding:5px 12px;border-radius:6px;cursor:pointer;">
+            🚀 Boost
+          </button>
+          ${!d.isClosed ? `<button onclick="closeSoulmate('${id}')" style="background:#6c757d;color:white;border:none;padding:5px 12px;border-radius:6px;cursor:pointer;">
+            🚫 Mark as Closed
+          </button>` : ''}
+        </div>
+      ` : ''}
+    `;
 
     container.appendChild(card);
-
-    // Ensure like count updates dynamically
-    updateLikeUI(id);
+    updateLikeUI(id);  // Update the like UI immediately
+    listenForLikeChanges(id);  // Start listening for like changes in real-time
   });
 }
 
 
+async function boostSoulmate(id) {
+  const userEmail = currentUser?.email || "";
+  const adminEmails = [
+    "mashabiki@teacherswapskenya.com",
+    "sironga1@teacherswapskenya.com",
+    "admin1@teacherswapskenya.com"
+  ];
 
-async function showLikes(profileId) {
-  const likesRef = soulmateRef.doc(profileId).collection("likes");
-  const snapshot = await likesRef.get();
+  const isAdminUser = adminEmails.includes(userEmail);
 
-  if (snapshot.empty) {
-    return showCustomAlert("🌝🌝🌝🌝🌝No likes for this profile yet.", "info");
+  if (isAdminUser) {
+    const boostExpiry = new Date();
+    boostExpiry.setDate(boostExpiry.getDate() + 7); // 7 days
+
+    try {
+      await soulmateRef.doc(id).update({
+        boosted: true,
+        boostExpiry: boostExpiry
+      });
+      showCustomAlert("✅ Profile boosted for FREE by Admin", "success");
+      loadSoulmates(); // Refresh
+    } catch (error) {
+      console.error("❌ Error boosting soulmate:", error);
+      showCustomAlert("❌ Failed to boost profile: " + error.message, "error");
+    }
+  } else {
+    // Prompt user to pay before boosting
+    const boostAmount = 250;
+    showPaymentModalFor("soulmate", boostAmount, id, "Your Soulmate Profile");
   }
-
-  let listItems = "";
-  snapshot.forEach(doc => {
-    const data = doc.data();
-    const userName = data.user || `User ID: ${doc.id}`;
-    listItems += `<li style="padding:6px 0; border-bottom:1px solid #eee;">${userName}</li>`;
-  });
-
-  const modalHTML = `
-    <div id="likesModal" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);z-index:9999;display:flex;align-items:center;justify-content:center;">
-      <div style="background:white;max-width:350px;width:90%;padding:20px;border-radius:8px;text-align:left;position:relative;">
-        <h3 style="margin-top:0;color:#e91e63;">❤️ Likes for This Profile</h3>
-        <ul style="list-style:none;padding:0;margin:15px 0;max-height:300px;overflow-y:auto;">${listItems}</ul>
-        <button onclick="document.getElementById('likesModal').remove()" style="margin-top:10px;background:#333;color:white;padding:8px 16px;border:none;border-radius:4px;">Close</button>
-      </div>
-    </div>
-  `;
-
-  document.body.insertAdjacentHTML("beforeend", modalHTML);
 }
 
+
+async function closeSoulmate(id) {
+  try {
+    await soulmateRef.doc(id).update({
+      isClosed: true
+    });
+    showCustomAlert("✅ Profile marked as closed.", "success");
+    loadSoulmates(); // Refresh the view
+  } catch (error) {
+    console.error("❌ Error closing soulmate profile:", error);
+    showCustomAlert("❌ Failed to close profile: " + error.message, "error");
+  }
+}
+
+
+function showCustomAlert(message, type = "info") {
+  const alertBox = document.createElement("div");
+  alertBox.textContent = message;
+  alertBox.style.cssText = `
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: ${type === "success" ? "#4caf50" : type === "error" ? "#f44336" : "#2196f3"};
+    color: white;
+    padding: 12px 20px;
+    border-radius: 6px;
+    z-index: 9999;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    font-size: 14px;
+  `;
+  document.body.appendChild(alertBox);
+  setTimeout(() => alertBox.remove(), 3000);
+}
 
 function showMatchCelebration() {
   // 🎊 Confetti (if available)
