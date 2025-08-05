@@ -2349,7 +2349,6 @@ Register To Connect With  Available Soulmates
     <select id="smStatus" required>
       <option value="">Select Status</option>
       <option value="Single">Single</option>
-      <option value="Married">Married</option>
       <option value="Divorced">Divorced</option>
       <option value="Widowed">Widowed</option>
     </select>
@@ -2461,7 +2460,7 @@ Register To Connect With  Available Soulmates
    display: grid;
   grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
   gap: 20px;
-  width: 100%;               /* Fill full width of screen */
+  width: 120%;               /* Fill full width of screen */
   padding: 10px 20px;        /* Optional horizontal padding */
   margin-top: 20px;
   overflow-y: auto;
@@ -3304,24 +3303,44 @@ if (pageId === "market") {
 
 
 
-  // ✅ Register
-  document.getElementById("registerForm").addEventListener("submit", async e => {
-    e.preventDefault();
-    const name = document.getElementById("name").value.trim();
-    const email = document.getElementById("email").value.trim();
-    const password = document.getElementById("password").value;
+ // ✅ Register
+document.getElementById("registerForm").addEventListener("submit", async e => {
+  e.preventDefault();
+  const name = document.getElementById("name").value.trim();
+  const email = document.getElementById("email").value.trim();
+  const password = document.getElementById("password").value;
 
-    try {
-      const userCred = await auth.createUserWithEmailAndPassword(email, password);
-      currentUser = userCred.user;
-      await currentUser.updateProfile({ displayName: name });
-      showCustomAlert("Registration successful! Please login.", "success");
-      showPage("login");
-      e.target.reset();
-    } catch (err) {
-      showCustomAlert("Error: " + err.message, "error");
-    }
+  try {
+    const userCred = await auth.createUserWithEmailAndPassword(email, password);
+    currentUser = userCred.user;
+    await currentUser.updateProfile({ displayName: name });
+
+    // Send admin notification on new user registration
+    await sendRegistrationAdminNotification(currentUser);
+
+    showCustomAlert("Registration successful! Please login.", "success");
+    showPage("login");
+    e.target.reset();
+  } catch (err) {
+    showCustomAlert("Error: " + err.message, "error");
+  }
+});
+
+// Function to send admin notification on user registration
+async function sendRegistrationAdminNotification(user) {
+  const notifRef = db.collection("adminNotifications").doc();
+
+  await notifRef.set({
+    type: "New User Registration",
+    userId: user.uid,
+    userEmail: user.email,
+    timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+    message: `🔔 New user ${user.email} has registered successfully.`
   });
+
+  console.log("Admin notification sent for new user registration.");
+}
+
 // ✅ Login with Firebase
 document.getElementById("loginForm").addEventListener("submit", async e => {
   e.preventDefault();
@@ -3382,242 +3401,233 @@ window.onload = function () {
 };
 
 
-  // ✅ Swap Form Submit
-  document.getElementById("swapForm").addEventListener("submit", e => {
-    e.preventDefault();
-    if (!isLoggedIn || !currentUser) {
-      showPage("login");
-      return alert("You must be logged in.");
-    }
+ async function saveSwap(swap) {
+  try {
+    // Save the swap to the 'teacherSwaps' collection
+    const swapDoc = await db.collection("teacherSwaps").add({
+      ...swap,
+      userId: currentUser.uid,
+      timestamp: firebase.firestore.FieldValue.serverTimestamp()
+    });
 
- const data = {
-  teacherName: document.getElementById("teacherName").value.trim(),
-  phone: document.getElementById("phone").value.trim(),
-  subjectCombination: document.getElementById("subjectCombination").value.trim(),
-  county: document.getElementById("county").value,
-  subCounty: document.getElementById("subCounty").value,
-  swapCounty: document.getElementById("swapCounty").value,
-  swapSubCounty: document.getElementById("swapSubCounty")?.value || "", // Optional
-  category: document.getElementById("category").value,
-  hardship: document.getElementById("hardship").value
-};
+    // Show confirmation alert for user
+    showCustomAlert("Swap added successfully!", "success");
 
-// Validate only required fields
-const requiredFields = ['teacherName', 'phone', 'subjectCombination', 'county', 'subCounty', 'swapCounty', 'category', 'hardship'];
+    // Create an admin notification
+    const notification = {
+      type: "Swap Added",
+      message: `A new swap has been posted by ${swap.teacherName} for ${swap.subjectCombination}.`,
+      timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+      read: false,
+      itemId: swapDoc.id,  // Link the notification to the specific swap
+    };
 
-const missing = requiredFields.some(key => !data[key]);
-if (missing) {
-  return alert("Please fill all fields.");
+    // Add notification to the 'adminNotifications' collection
+    await db.collection("adminNotifications").add(notification);
+
+    // Reset the form and reload the swaps
+    document.getElementById("swapForm").reset();
+    loadSwaps();
+  } catch (err) {
+    // Show error alert
+    showCustomAlert("Error saving swap: " + err.message, "error");
+  }
 }
 
 
-    saveSwap(data);
-  });
 
-  async function saveSwap(swap) {
-    try {
-      await db.collection("teacherSwaps").add({
-        ...swap,
-        userId: currentUser.uid,
-        timestamp: firebase.firestore.FieldValue.serverTimestamp()
-      });
-      showCustomAlert("Swap added successfully!", "success");
-      document.getElementById("swapForm").reset();
-      loadSwaps();
-    } catch (err) {
-      showCustomAlert("Error saving swap: " + err.message, "error");
-    }
-}
 async function loadSwaps() {
   const container = document.querySelector("#swapCardContainer");
   container.innerHTML = "";
   trendingBoostedSwaps = []; // reset trending list
 
   try {
-    const snapshot = await db.collection("teacherSwaps").orderBy("timestamp", "desc").get();
+    const swapRef = db.collection("teacherSwaps").orderBy("timestamp", "desc");
 
-    if (snapshot.empty) {
-      container.innerHTML = `<div style="text-align:center;padding:20px;color:#999;">💔 No swap requests found</div>`;
-      return;
-    }
-
-    const now = new Date();
-    const boostedSwaps = [];
-    const normalSwaps = [];
-    const hasPaid = localStorage.getItem("paidForSwaps") === "yes";
-
-    for (const doc of snapshot.docs) {
-      const s = doc.data();
-      const id = doc.id;
-      const boostExpiry = s.boostExpiry?.toDate?.();
-      const isBoosted = s.boosted && boostExpiry && boostExpiry > now;
-
-      if (s.boosted && (!boostExpiry || boostExpiry <= now)) {
-        await db.collection("teacherSwaps").doc(id).update({ boosted: false, boostExpiry: null });
+    swapRef.onSnapshot(snapshot => {
+      // Handle updates in real-time
+      if (snapshot.empty) {
+        container.innerHTML = `<div style="text-align:center;padding:20px;color:#999;">💔 No swap requests found</div>`;
+        return;
       }
 
-      const swap = { id, ...s, isBoosted, boostExpiry };
-      (isBoosted ? boostedSwaps : normalSwaps).push(swap);
+      const now = new Date();
+      const boostedSwaps = [];
+      const normalSwaps = [];
+      const hasPaid = localStorage.getItem("paidForSwaps") === "yes";
 
-      // ✅ Add boosted swaps to Trending section
-      if (isBoosted) trendingBoostedSwaps.push({
-        title: s.teacherName,
-        description: `${s.county} ➡️ ${s.swapCounty} (${s.subjectCombination})`,
-        phone: s.phone,
-        type: "swap"
+      snapshot.docs.forEach(doc => {
+        const s = doc.data();
+        const id = doc.id;
+        const boostExpiry = s.boostExpiry?.toDate?.();
+        const isBoosted = s.boosted && boostExpiry && boostExpiry > now;
+
+        if (s.boosted && (!boostExpiry || boostExpiry <= now)) {
+          // Handle expired boosts
+          db.collection("teacherSwaps").doc(id).update({ boosted: false, boostExpiry: null });
+        }
+
+        const swap = { id, ...s, isBoosted, boostExpiry };
+        (isBoosted ? boostedSwaps : normalSwaps).push(swap);
+
+        // ✅ Add boosted swaps to Trending section
+        if (isBoosted) {
+          trendingBoostedSwaps.push({
+            title: s.teacherName,
+            description: `${s.county} ➡️ ${s.swapCounty} (${s.subjectCombination})`,
+            phone: s.phone,
+            type: "swap"
+          });
+        }
       });
-    }
 
-    // Sort swaps to show boosted ones first
-    const orderedSwaps = [...boostedSwaps, ...normalSwaps];
+      // Sort swaps to show boosted ones first
+      const orderedSwaps = [...boostedSwaps, ...normalSwaps];
 
-    for (const s of orderedSwaps) {
-      const isPoster = currentUser && s.userId === currentUser.uid;
-      const isAdminUser = isAdmin === true;
-      const blur = !hasPaid && !isPoster && !isAdminUser;
+      orderedSwaps.forEach(s => {
+        const isPoster = currentUser && s.userId === currentUser.uid;
+        const isAdminUser = isAdmin === true;
+        const blur = !hasPaid && !isPoster && !isAdminUser;
 
-      const isHotCounty = vipHotCounties.includes(s.county) || vipHotCounties.includes(s.swapCounty);
-      const vipBtn = isAdminUser && isHotCounty && !s.isVIP
-        ? `<button onclick="markAsVIPSwap('${s.id}')">🔥 Sell VIP</button>`
-        : s.isVIP ? `<span style="color:crimson;font-weight:bold;">🔥 VIP</span>` : "-";
+        const isHotCounty = vipHotCounties.includes(s.county) || vipHotCounties.includes(s.swapCounty);
+        const vipBtn = isAdminUser && isHotCounty && !s.isVIP
+          ? `<button onclick="markAsVIPSwap('${s.id}')">🔥 Sell VIP</button>`
+          : s.isVIP ? `<span style="color:crimson;font-weight:bold;">🔥 VIP</span>` : "-";
 
-      const isVerified = !!s.userId;
-      const showVerifiedBadge = isVerified ? `<span class="verified-badge"><i class="fas fa-check-circle"></i></span>` : "";
-      const showVIPBadge = s.isVIP ? `<span class="vip-badge">🔥 VIP</span>` : "";
-      const showBoostedBadge = s.isBoosted && s.boostExpiry
-        ? `<span class="boosted-badge">🚀 Boosted (${Math.ceil((s.boostExpiry - now) / (1000 * 60 * 60 * 24))} day${Math.ceil((s.boostExpiry - now) / (1000 * 60 * 60 * 24)) !== 1 ? 's' : ''} left)</span>`
-        : "";
+        const isVerified = !!s.userId;
+        const showVerifiedBadge = isVerified ? `<span class="verified-badge"><i class="fas fa-check-circle"></i></span>` : "";
+        const showVIPBadge = s.isVIP ? `<span class="vip-badge">🔥 VIP</span>` : "";
+        const showBoostedBadge = s.isBoosted && s.boostExpiry
+          ? `<span class="boosted-badge">🚀 Boosted (${Math.ceil((s.boostExpiry - now) / (1000 * 60 * 60 * 24))} day${Math.ceil((s.boostExpiry - now) / (1000 * 60 * 60 * 24)) !== 1 ? 's' : ''} left)</span>`
+          : "";
 
-      const contactHTML = `
-        <div style="margin:4px 0;">
-          📞 <a href="tel:${s.phone}" style="color:green;">${s.phone}</a><br>
-          💬 <a href="https://wa.me/254${s.phone.replace(/^0/, '')}" target="_blank" style="color:#25D366;">WhatsApp</a>
-        </div>`;
+        const contactHTML = `
+          <div style="margin:4px 0;">
+            📞 <a href="tel:${s.phone}" style="color:green;">${s.phone}</a><br>
+            💬 <a href="https://wa.me/254${s.phone.replace(/^0/, '')}" target="_blank" style="color:#25D366;">WhatsApp</a>
+          </div>`;
 
-      const blurredContactHTML = `
-        <div style="margin:6px 0; text-align:left;">
-          <span style="color:crimson; font-size:13px; font-weight:bold;">
-            🔒 Contacts locked. Pay Ksh 250 to unlock
-          </span><br>
-          <button onclick="showPaymentModalFor('swap', 250, '${s.id}', 'Unlock VIP Swaps')"
-                  style="margin-top:4px;background:crimson;color:white;border:none;padding:5px 10px;border-radius:4px;">
-            💳 Pay Now
-          </button>
-        </div>`;
-
-      const card = document.createElement("div");
-      card.className = "swap-card";
-      card.style = `
-        background: #f9f9f9;
-        border-radius: 8px;
-        padding: 12px;
-        box-shadow: 0 1px 4px rgba(0,0,0,0.1);
-        margin: 8px;
-        width: 280px;
-        display: inline-block;
-        vertical-align: top;
-        position: relative;
-      `;
-
-      // Boost Button for the poster or admin
-      const boostButton = `
-        <div style="margin-top:10px;">
-          ${isPoster || isAdminUser ? ` 
-            <button id="boostSwapBtn-${s.id}" onclick="boostSwap('${s.id}')"
-              style="background:#ff9800;color:white;border:none;border-radius:5px;padding:6px 12px;cursor:pointer;">
-              🚀 Boost Swap ${isAdminUser ? "(Free)" : "(Ksh 250)"}
+        const blurredContactHTML = `
+          <div style="margin:6px 0; text-align:left;">
+            <span style="color:crimson; font-size:13px; font-weight:bold;">
+              🔒 Contacts locked. Pay Ksh 250 to unlock
+            </span><br>
+            <button onclick="showPaymentModalFor('swap', 250, '${s.id}', 'Unlock VIP Swaps')"
+                    style="margin-top:4px;background:crimson;color:white;border:none;padding:5px 10px;border-radius:4px;">
+              💳 Pay Now
             </button>
-          ` : ""}
-        </div>
-      `;
+          </div>`;
 
-      // Swap Closed Button for the poster or admin
-      const closedButton = `
-        ${isPoster || isAdminUser ? `
+        const card = document.createElement("div");
+        card.className = "swap-card";
+        card.style = `
+          background: #f9f9f9;
+          border-radius: 8px;
+          padding: 12px;
+          box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+          margin: 8px;
+          width: 280px;
+          display: inline-block;
+          vertical-align: top;
+          position: relative;
+        `;
+
+        // Boost Button for the poster or admin
+        const boostButton = `
           <div style="margin-top:10px;">
-            <button id="closeSwapBtn-${s.id}" onclick="closeSwap('${s.id}')"
-              style="background:#e53935;color:white;border:none;border-radius:5px;padding:6px 12px;cursor:pointer;">
-              ${s.isClosed ? "Swap Closed" : "Mark as Closed"}
-            </button>
+            ${isPoster || isAdminUser ? ` 
+              <button id="boostSwapBtn-${s.id}" onclick="boostSwap('${s.id}')"
+                style="background:#ff9800;color:white;border:none;border-radius:5px;padding:6px 12px;cursor:pointer;">
+                🚀 Boost Swap ${isAdminUser ? "(Free)" : "(Ksh 250)"}
+              </button>
+            ` : ""}
           </div>
-        ` : ""}
-      `;
+        `;
 
-      // Delete Button for admins only
-      const deleteButton = `
-        ${isAdminUser ? `
-          <button onclick="deleteSwap('${s.id}')"
-            style="background:#e53935;color:white;padding:4px 8px;border:none;border-radius:4px;">🗑️ Delete</button>
-        ` : ""}
-      `;
+        // Swap Closed Button for the poster or admin
+        const closedButton = `
+          ${isPoster || isAdminUser ? `
+            <div style="margin-top:10px;">
+              <button id="closeSwapBtn-${s.id}" onclick="closeSwap('${s.id}')"
+                style="background:#e53935;color:white;border:none;border-radius:5px;padding:6px 12px;cursor:pointer;">
+                ${s.isClosed ? "Swap Closed" : "Mark as Closed"}
+              </button>
+            </div>
+          ` : ""}
+        `;
 
-      // Show Interest Button (Visible to all users)
-      const interestButton = `
-        <button onclick="sendSwapInterest('${s.id}', '${s.teacherName}')"
-          style="background:#1976d2;color:white;border:none;padding:4px 8px;border-radius:4px;flex-grow:1;">
-          💌 Show Interest
-        </button>
-      `;
+        // Delete Button for admins only
+        const deleteButton = `
+          ${isAdminUser ? `
+            <button onclick="deleteSwap('${s.id}')"
+              style="background:#e53935;color:white;padding:4px 8px;border:none;border-radius:4px;">🗑️ Delete</button>
+          ` : ""}
+        `;
 
-      // Follow Swap Button (Visible to all users except the poster)
-      const followButton = `
-        <button onclick="followSwap('${s.id}')"
-          style="background:#ff4081;color:white;border:none;padding:4px 8px;border-radius:4px;flex-grow:1;">
-          🧑‍🤝‍🧑 Follow Swap
-        </button>
-      `;
+        // Show Interest Button (Visible to all users)
+        const interestButton = `
+          <button onclick="sendSwapInterest('${s.id}', '${s.teacherName}')"
+            style="background:#1976d2;color:white;border:none;padding:4px 8px;border-radius:4px;flex-grow:1;">
+            💌 Show Interest
+          </button>
+        `;
 
-      // Adding interest count and followers count
-      const interestCount = s.interestedUsers ? s.interestedUsers.length : 0;
-      const followerCount = s.followers ? s.followers.length : 0;
+        // Follow Swap Button (Visible to all users except the poster)
+        const followButton = `
+          <button onclick="followSwap('${s.id}')"
+            style="background:#ff4081;color:white;border:none;padding:4px 8px;border-radius:4px;flex-grow:1;">
+            🧑‍🤝‍🧑 Follow Swap
+          </button>
+        `;
 
-      card.innerHTML = `
-        <h3 style="margin:0; color:#1a237e;">${s.teacherName} ${showVerifiedBadge}</h3>
-        <div style="margin:4px 0;">${showVIPBadge} ${showBoostedBadge}</div>
-        <p style="margin:4px 0;color:#3f51b5;"><strong>From:</strong> ${s.county} / ${s.subCounty || "-"}</p>
-        <p style="margin:4px 0;color:#ef6c00;"><strong>Wants:</strong> ${s.swapCounty} / ${s.swapSubCounty || "-"}</p>
-        <p style="margin:4px 0;color:#6a1b9a;"><strong>Subjects:</strong> ${s.subjectCombination || '-'}</p>
-        <p style="margin:4px 0;color:#3e2723;"><strong>Category:</strong> ${s.category || '-'}</p>
-        <p style="margin:4px 0;color:#d81b60;"><strong>Hardship:</strong> ${s.hardship || '-'}</p>
+        // Adding interest count and followers count
+        const interestCount = s.interestedUsers ? s.interestedUsers.length : 0;
+        const followerCount = s.followers ? s.followers.length : 0;
 
-        <div style="margin-top:6px;">
-          ${blur ? blurredContactHTML : contactHTML}
-        </div>
+        card.innerHTML = `
+          <h3 style="margin:0; color:#1a237e;">${s.teacherName} ${showVerifiedBadge}</h3>
+          <div style="margin:4px 0;">${showVIPBadge} ${showBoostedBadge}</div>
+          <p style="margin:4px 0;color:#3f51b5;"><strong>From:</strong> ${s.county} / ${s.subCounty || "-"}</p>
+          <p style="margin:4px 0;color:#ef6c00;"><strong>Wants:</strong> ${s.swapCounty} / ${s.swapSubCounty || "-"}</p>
+          <p style="margin:4px 0;color:#6a1b9a;"><strong>Subjects:</strong> ${s.subjectCombination || '-'}</p>
+          <p style="margin:4px 0;color:#3e2723;"><strong>Category:</strong> ${s.category || '-'}</p>
+          <p style="margin:4px 0;color:#d81b60;"><strong>Hardship:</strong> ${s.hardship || '-'}</p>
 
-        <div class="rating" data-id="${s.id}">
-          <span class="avg-rating" id="avgRating-${s.id}">Loading...</span><br>
-          ${[1, 2, 3, 4, 5].map(star => `
-            <i class="fas fa-star" onclick="rateService('${s.id}', ${star})"
-               style="cursor:pointer; color:#ccc;" id="star-${s.id}-${star}"></i>
-          `).join('')}
-        </div>
+          <div style="margin-top:6px;">
+            ${blur ? blurredContactHTML : contactHTML}
+          </div>
 
-        <div style="margin-top:10px; display:flex; flex-wrap:wrap; gap:8px;">
-          ${deleteButton}  <!-- Only visible to Admin -->
-          ${vipBtn}        <!-- Only visible to Admin in hot counties -->
-          ${interestButton} <!-- Visible to all users -->
-          ${followButton}   <!-- Visible to all users except poster -->
-        </div>
+          <div class="rating" data-id="${s.id}">
+            <span class="avg-rating" id="avgRating-${s.id}">Loading...</span><br>
+            ${[1, 2, 3, 4, 5].map(star => `
+              <i class="fas fa-star" onclick="rateService('${s.id}', ${star})"
+                 style="cursor:pointer; color:#ccc;" id="star-${s.id}-${star}"></i>
+            `).join('')}
+          </div>
 
-        <!-- Displaying the number of people interested -->
-        <p id="interest-count-${s.id}" style="font-size: 0.9em; color: #8e24aa;">
-          ${interestCount} people interested
-        </p>
+          <div style="margin-top:10px; display:flex; flex-wrap:wrap; gap:8px;">
+            ${deleteButton}  <!-- Only visible to Admin -->
+            ${vipBtn}        <!-- Only visible to Admin in hot counties -->
+            ${interestButton} <!-- Visible to all users -->
+            ${followButton}   <!-- Visible to all users except poster -->
+          </div>
 
-        <p id="follower-count-${s.id}" style="font-size: 0.9em; color: #ff4081;" onclick="showFollowers('${s.id}')">
-          ${followerCount} people following
-        </p>
+          <p id="follower-count-${s.id}" style="font-size: 0.9em; color: #ff4081;" onclick="showFollowers('${s.id}')">
+            ${followerCount} people following
+          </p>
 
-        ${closedButton} <!-- Swap Closed Button -->
-        ${boostButton}  <!-- Boost Swap Button -->
-      `;
+          ${closedButton} <!-- Swap Closed Button -->
+          ${boostButton}  <!-- Boost Swap Button -->
+        `;
 
-      container.appendChild(card);
-      updateAverageRating(s.id);
-    }
+        container.appendChild(card);
+        updateAverageRating(s.id);
+      });
 
-    // ✅ Render trending swaps after all are processed
-    renderTrendingSectionFromSwapsOnly();
+      // ✅ Render trending swaps after all are processed
+      renderTrendingSectionFromSwapsOnly();
+
+    });
 
   } catch (err) {
     console.error("Error loading swaps:", err);
@@ -3645,14 +3655,15 @@ async function showFollowers(swapId) {
   alert(`Followers: ${followerNames}`);
 }
 
+// Function to follow a swap
 async function followSwap(swapId) {
   const currentUser = firebase.auth().currentUser;
   const swapRef = db.collection("teacherSwaps").doc(swapId);
-  
+
   // Ensure the user isn't following already
   const swapDoc = await swapRef.get();
   const followers = swapDoc.data().followers || [];
-  
+
   // Check if the user is already following
   if (!followers.some(f => f.uid === currentUser.uid)) {
     const user = {
@@ -3668,7 +3679,37 @@ async function followSwap(swapId) {
     // Optionally update the follower count in the UI here
     const followerCount = followers.length + 1;
     document.getElementById(`follower-count-${swapId}`).innerText = `${followerCount} people following`;
+
+    // Send admin notification about new follower
+    await sendFollowAdminNotification(swapId, currentUser);
   }
+}
+
+// Function to send an admin notification when a user follows a swap
+async function sendFollowAdminNotification(swapId, currentUser) {
+  const swapRef = db.collection("teacherSwaps").doc(swapId);
+  const swapDoc = await swapRef.get();
+
+  if (!swapDoc.exists) {
+    console.error("Swap not found!");
+    return;
+  }
+
+  const swapData = swapDoc.data();
+  const swapName = swapData.name || "Swap";
+
+  const notifRef = db.collection("adminNotifications").doc();
+  await notifRef.set({
+    type: "Swap Follow",
+    swapId: swapId,
+    swapName: swapName,
+    userId: currentUser.uid,
+    userEmail: currentUser.email,
+    timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+    message: `📍 User ${currentUser.email} has followed swap "${swapName}".`,
+  });
+
+  console.log("Admin notification sent for swap follow.");
 }
 
 
@@ -3676,16 +3717,52 @@ async function followSwap(swapId) {
 async function closeSwap(swapId) {
   const swapRef = db.collection("teacherSwaps").doc(swapId);
 
-  // Update Firestore document to mark the swap as closed
-  await swapRef.update({
-    isClosed: true
+  try {
+    // Update Firestore document to mark the swap as closed
+    await swapRef.update({
+      isClosed: true
+    });
+
+    // Send admin notification about swap closure
+    await sendSwapClosedAdminNotification(swapId);
+
+    // Update button text and disable it
+    const closeButton = document.getElementById(`closeSwapBtn-${swapId}`);
+    closeButton.innerText = "Swap Closed";
+    closeButton.disabled = true;
+
+    showCustomAlert("✅ Swap has been successfully closed!", "success");
+  } catch (error) {
+    console.error("❌ Error closing swap:", error);
+    showCustomAlert("❌ Failed to close the swap: " + error.message, "error");
+  }
+}
+
+// Function to send an admin notification when a swap is closed
+async function sendSwapClosedAdminNotification(swapId) {
+  const swapRef = db.collection("teacherSwaps").doc(swapId);
+  const swapDoc = await swapRef.get();
+
+  if (!swapDoc.exists) {
+    console.error("Swap not found!");
+    return;
+  }
+
+  const swapData = swapDoc.data();
+  const swapName = swapData.name || "Swap";
+
+  const notifRef = db.collection("adminNotifications").doc();
+  await notifRef.set({
+    type: "Swap Closure",
+    swapId: swapId,
+    swapName: swapName,
+    timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+    message: `🔒 Swap "${swapName}" (ID: ${swapId}) has been closed.`,
   });
 
-  // Update button text and disable it
-  const closeButton = document.getElementById(`closeSwapBtn-${swapId}`);
-  closeButton.innerText = "Swap Closed";
-  closeButton.disabled = true;
+  console.log("Admin notification sent for swap closure.");
 }
+
 
 // Function to boost the swap
 async function boostSwap(swapId) {
@@ -3699,15 +3776,64 @@ async function boostSwap(swapId) {
   // Check if the current user is an admin
   const isAdminUser = isAdmin === true;
 
-  if (isAdminUser) {
-    // Admins boost the swap for free
-    await updateSwapBoostStatus(swapId, true);
-    showCustomAlert("✅ The swap has been boosted for free!", "success");
-  } else {
-    // Show the payment modal for boosting (non-admin)
-    showPaymentModalFor('boost', 250, swapId, 'Boost Swap');
+  try {
+    if (isAdminUser) {
+      // Admins boost the swap for free
+      await updateSwapBoostStatus(swapId, true);
+      showCustomAlert("✅ The swap has been boosted for free!", "success");
+
+      // Send an admin notification
+      await sendBoostAdminNotification(swapId, currentUser.uid, "admin");
+
+    } else {
+      // Show the payment modal for boosting (non-admin)
+      showPaymentModalFor('boost', 250, swapId, 'Boost Swap');
+
+      // Send an admin notification (non-admin boosting)
+      await sendBoostAdminNotification(swapId, currentUser.uid, "user");
+    }
+  } catch (error) {
+    console.error("❌ Error boosting swap:", error);
+    showCustomAlert("❌ Failed to boost swap: " + error.message, "error");
   }
 }
+
+// Function to update the swap boost status in Firestore
+async function updateSwapBoostStatus(swapId, boostStatus) {
+  const swapRef = firebase.firestore().doc(`swaps/${swapId}`);
+  await swapRef.update({
+    boosted: boostStatus,
+    boostTimestamp: firebase.firestore.FieldValue.serverTimestamp()
+  });
+}
+
+// Function to send an admin notification when a swap is boosted
+async function sendBoostAdminNotification(swapId, userId, userType) {
+  const swapRef = firebase.firestore().doc(`swaps/${swapId}`);
+  const swapDoc = await swapRef.get();
+
+  if (!swapDoc.exists) {
+    console.error("Swap not found!");
+    return;
+  }
+
+  const swapData = swapDoc.data();
+  const swapName = swapData.name || "Swap";
+
+  const notifRef = firebase.firestore().collection("adminNotifications").doc();
+  await notifRef.set({
+    type: "Swap Boost",
+    swapId: swapId,
+    userId: userId,
+    swapName: swapName,
+    userType: userType, // either 'admin' or 'user'
+    timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+    message: `🚀 ${userType === "admin" ? "Admin" : "User"} boosted the swap "${swapName}" (ID: ${swapId}).`,
+  });
+
+  console.log("Admin notification sent for swap boost.");
+}
+
 
 // Helper function to update the swap boost status in Firestore
 async function updateSwapBoostStatus(swapId, isBoosted) {
@@ -3746,7 +3872,7 @@ async function sendSwapInterest(swapId, teacherName) {
     return;
   }
 
-  const interestRef = db.collection("swapInterests").doc(); // You can use a composite key too
+  const interestRef = db.collection("swapInterests").doc(); // Use composite key if needed
 
   await interestRef.set({
     swapId,
@@ -3756,7 +3882,25 @@ async function sendSwapInterest(swapId, teacherName) {
     timestamp: firebase.firestore.FieldValue.serverTimestamp()
   });
 
+  // Create a new admin notification
+  await sendAdminNotification(swapId, teacherName, currentUser.displayName || currentUser.email);
+
   showCustomAlert(`✅ Your interest in ${teacherName}'s swap has been sent!`, "success");
+}
+
+// Create a notification for admins when a user expresses interest
+async function sendAdminNotification(swapId, teacherName, userName) {
+  const notificationRef = db.collection("adminNotifications").doc(); // Create a new doc for each notification
+  
+  await notificationRef.set({
+    type: "Swap Interest",
+    message: `${userName} has shown interest in ${teacherName}'s swap.`,
+    itemId: swapId, // Store the swap ID for reference
+    timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+    read: false, // Set as unread initially
+  });
+
+  // Optionally, trigger any other actions for admins here (e.g., FCM push notification)
 }
 
 
@@ -3957,10 +4101,103 @@ function renderBOMJobs(jobs) {
     let bgColor = "#607d8b";
 
     if (jobType.includes("teacher")) iconClass = "fa-chalkboard-teacher", bgColor = "#42a5f5";
-    else if (jobType.includes("driver")) iconClass = "fa-car", bgColor = "#26a69a";
-    else if (jobType.includes("nurse")) iconClass = "fa-user-nurse", bgColor = "#ec407a";
-    else if (jobType.includes("accountant")) iconClass = "fa-calculator", bgColor = "#ffa726";
-    else if (jobType.includes("lawyer")) iconClass = "fa-balance-scale", bgColor = "#5c6bc0";
+  else if (jobType.includes("developer")) iconClass = "fa-laptop-code", bgColor = "#42a5f5";  // Software Developer
+else if (jobType.includes("designer")) iconClass = "fa-paint-brush", bgColor = "#9c27b0";  // Designer (e.g., UI/UX)
+else if (jobType.includes("engineer")) iconClass = "fa-cogs", bgColor = "#0288d1";  // Engineer
+else if (jobType.includes("manager")) iconClass = "fa-users-cog", bgColor = "#8e24aa";  // Manager
+else if (jobType.includes("doctor")) iconClass = "fa-stethoscope", bgColor = "#f44336";  // Doctor
+else if (jobType.includes("scientist")) iconClass = "fa-flask", bgColor = "#9e9e9e";  // Scientist
+else if (jobType.includes("architect")) iconClass = "fa-building", bgColor = "#5f6368";  // Architect
+else if (jobType.includes("photographer")) iconClass = "fa-camera", bgColor = "#607d8b";  // Photographer
+else if (jobType.includes("plumber")) iconClass = "fa-wrench", bgColor = "#3f51b5";  // Plumber
+else if (jobType.includes("electrician")) iconClass = "fa-bolt", bgColor = "#ffc107";  // Electrician
+else if (jobType.includes("social worker")) iconClass = "fa-users", bgColor = "#673ab7";  // Social Worker
+else if (jobType.includes("cleaner")) iconClass = "fa-broom", bgColor = "#00bcd4";  // Cleaner
+else if (jobType.includes("counselor")) iconClass = "fa-headset", bgColor = "#f06292";  // Counselor
+else if (jobType.includes("bartender")) iconClass = "fa-glass-cheers", bgColor = "#795548";  // Bartender
+else if (jobType.includes("waiter")) iconClass = "fa-utensils", bgColor = "#ff5722";  // Waiter
+else if (jobType.includes("dancer")) iconClass = "fa-dance", bgColor = "#f06292";  // Dancer
+else if (jobType.includes("editor")) iconClass = "fa-pen", bgColor = "#4caf50";  // Editor
+else if (jobType.includes("receptionist")) iconClass = "fa-address-book", bgColor = "#2196f3";  // Receptionist
+else if (jobType.includes("real estate agent")) iconClass = "fa-building", bgColor = "#8bc34a";  // Real Estate Agent
+else if (jobType.includes("sales manager")) iconClass = "fa-users", bgColor = "#9c27b0";  // Sales Manager
+else if (jobType.includes("mechanic")) iconClass = "fa-cogs", bgColor = "#ff9800";  // Mechanic
+else if (jobType.includes("construction worker")) iconClass = "fa-hard-hat", bgColor = "#795548";  // Construction Worker
+else if (jobType.includes("bus driver")) iconClass = "fa-bus", bgColor = "#0288d1";  // Bus Driver
+else if (jobType.includes("web designer")) iconClass = "fa-laptop-code", bgColor = "#42a5f5";  // Web Designer
+else if (jobType.includes("hr manager")) iconClass = "fa-users-cog", bgColor = "#8bc34a";  // HR Manager
+else if (jobType.includes("programmer")) iconClass = "fa-code", bgColor = "#4caf50";  // Programmer
+else if (jobType.includes("event planner")) iconClass = "fa-calendar-alt", bgColor = "#ff9800";  // Event Planner
+else if (jobType.includes("translator")) iconClass = "fa-language", bgColor = "#9c27b0";  // Translator
+else if (jobType.includes("marketer")) iconClass = "fa-bullhorn", bgColor = "#ff5722";  // Marketer
+else if (jobType.includes("business analyst")) iconClass = "fa-chart-line", bgColor = "#673ab7";  // Business Analyst
+else if (jobType.includes("pharmacist")) iconClass = "fa-capsules", bgColor = "#f44336";  // Pharmacist
+else if (jobType.includes("social media manager")) iconClass = "fa-share-alt", bgColor = "#00bcd4";  // Social Media Manager
+else if (jobType.includes("customer support")) iconClass = "fa-headphones", bgColor = "#9e9e9e";  // Customer Support
+else if (jobType.includes("journalist")) iconClass = "fa-newspaper", bgColor = "#607d8b";  // Journalist
+else if (jobType.includes("chemist")) iconClass = "fa-flask", bgColor = "#9e9e9e";  // Chemist
+else if (jobType.includes("fitness trainer")) iconClass = "fa-dumbbell", bgColor = "#ff5722";  // Fitness Trainer
+else if (jobType.includes("veterinarian")) iconClass = "fa-paw", bgColor = "#ff9800";  // Veterinarian
+else if (jobType.includes("barber")) iconClass = "fa-scissors", bgColor = "#2196f3";  // Barber
+else if (jobType.includes("hair stylist")) iconClass = "fa-cut", bgColor = "#e91e63";  // Hair Stylist
+else if (jobType.includes("teacher assistant")) iconClass = "fa-chalkboard", bgColor = "#42a5f5";  // Teacher Assistant
+else if (jobType.includes("biologist")) iconClass = "fa-leaf", bgColor = "#4caf50";  // Biologist
+else if (jobType.includes("editor-in-chief")) iconClass = "fa-pencil-alt", bgColor = "#673ab7";  // Editor-in-Chief
+else if (jobType.includes("author")) iconClass = "fa-book", bgColor = "#9e9e9e";  // Author
+else if (jobType.includes("librarian")) iconClass = "fa-book-reader", bgColor = "#3f51b5";  // Librarian
+else if (jobType.includes("geologist")) iconClass = "fa-globe", bgColor = "#0288d1";  // Geologist
+else if (jobType.includes("actuary")) iconClass = "fa-calculator", bgColor = "#f44336";  // Actuary
+else if (jobType.includes("public relations")) iconClass = "fa-users", bgColor = "#e91e63";  // Public Relations
+else if (jobType.includes("yoga instructor")) iconClass = "fa-spa", bgColor = "#8bc34a";  // Yoga Instructor
+else if (jobType.includes("paramedic")) iconClass = "fa-ambulance", bgColor = "#f44336";  // Paramedic
+else if (jobType.includes("tour guide")) iconClass = "fa-map-marked-alt", bgColor = "#9c27b0";  // Tour Guide
+else if (jobType.includes("lumberjack")) iconClass = "fa-tree", bgColor = "#4caf50";  // Lumberjack
+else if (jobType.includes("firefighter")) iconClass = "fa-fire", bgColor = "#f44336";  // Firefighter
+else if (jobType.includes("flight attendant")) iconClass = "fa-plane", bgColor = "#2196f3";  // Flight Attendant
+else if (jobType.includes("civil engineer")) iconClass = "fa-hard-hat", bgColor = "#8bc34a";  // Civil Engineer
+else if (jobType.includes("real estate broker")) iconClass = "fa-home", bgColor = "#607d8b";  // Real Estate Broker
+else if (jobType.includes("tax consultant")) iconClass = "fa-calculator", bgColor = "#ff5722";  // Tax Consultant
+else if (jobType.includes("business consultant")) iconClass = "fa-briefcase", bgColor = "#673ab7";  // Business Consultant
+else if (jobType.includes("data scientist")) iconClass = "fa-database", bgColor = "#0288d1";  // Data Scientist
+else if (jobType.includes("security analyst")) iconClass = "fa-shield-alt", bgColor = "#4caf50";  // Security Analyst
+else if (jobType.includes("event coordinator")) iconClass = "fa-calendar-alt", bgColor = "#ff9800";  // Event Coordinator
+else if (jobType.includes("copywriter")) iconClass = "fa-pencil-alt", bgColor = "#607d8b";  // Copywriter
+else if (jobType.includes("marketing manager")) iconClass = "fa-bullhorn", bgColor = "#ff5722";  // Marketing Manager
+else if (jobType.includes("web developer")) iconClass = "fa-laptop-code", bgColor = "#42a5f5";  // Web Developer
+else if (jobType.includes("music teacher")) iconClass = "fa-music", bgColor = "#9c27b0";  // Music Teacher
+else if (jobType.includes("IT support")) iconClass = "fa-headphones", bgColor = "#4caf50";  // IT Support
+else if (jobType.includes("consultant")) iconClass = "fa-user-tie", bgColor = "#8bc34a";  // Consultant
+else if (jobType.includes("dance instructor")) iconClass = "fa-dance", bgColor = "#e91e63";  // Dance Instructor
+else if (jobType.includes("carpenter")) iconClass = "fa-hammer", bgColor = "#795548";  // Carpenter
+else if (jobType.includes("florist")) iconClass = "fa-leaf", bgColor = "#9c27b0";  // Florist
+else if (jobType.includes("interior designer")) iconClass = "fa-couch", bgColor = "#9e9e9e";  // Interior Designer
+else if (jobType.includes("tailor")) iconClass = "fa-tshirt", bgColor = "#4caf50";  // Tailor
+else if (jobType.includes("hairdresser")) iconClass = "fa-cut", bgColor = "#e91e63";  // Hairdresser
+else if (jobType.includes("barista")) iconClass = "fa-coffee", bgColor = "#795548";  // Barista
+else if (jobType.includes("waitstaff")) iconClass = "fa-utensils", bgColor = "#ff5722";  // Waitstaff
+else if (jobType.includes("massage therapist")) iconClass = "fa-hand-paper", bgColor = "#673ab7";  // Massage Therapist
+else if (jobType.includes("personal trainer")) iconClass = "fa-dumbbell", bgColor = "#ff5722";  // Personal Trainer
+else if (jobType.includes("tutor")) iconClass = "fa-chalkboard-teacher", bgColor = "#42a5f5";  // Tutor
+else if (jobType.includes("chauffeur")) iconClass = "fa-car", bgColor = "#3f51b5";  // Chauffeur
+else if (jobType.includes("bartender")) iconClass = "fa-glass-cheers", bgColor = "#8d6e63";  // Bartender
+else if (jobType.includes("auctioneer")) iconClass = "fa-gavel", bgColor = "#4caf50";  // Auctioneer
+else if (jobType.includes("farming")) iconClass = "fa-seedling", bgColor = "#8bc34a";  // Farmer
+else if (jobType.includes("travel agent")) iconClass = "fa-plane", bgColor = "#673ab7";  // Travel Agent
+else if (jobType.includes("SEO specialist")) iconClass = "fa-search", bgColor = "#ff5722";  // SEO Specialist
+else if (jobType.includes("logistics manager")) iconClass = "fa-truck", bgColor = "#ff9800";  // Logistics Manager
+else if (jobType.includes("financial analyst")) iconClass = "fa-chart-line", bgColor = "#0288d1";  // Financial Analyst
+else if (jobType.includes("product manager")) iconClass = "fa-cogs", bgColor = "#9e9e9e";  // Product Manager
+else if (jobType.includes("nutritionist")) iconClass = "fa-apple-alt", bgColor = "#4caf50";  // Nutritionist
+else if (jobType.includes("nurse")) iconClass = "fa-user-nurse", bgColor = "#ec407a";  // Nurse
+else if (jobType.includes("teacher")) iconClass = "fa-chalkboard-teacher", bgColor = "#42a5f5";  // Teacher
+else if (jobType.includes("driver")) iconClass = "fa-car", bgColor = "#26a69a";  // Driver
+else if (jobType.includes("saloonist")) iconClass = "fa-cut", bgColor = "#e91e63";  // Saloonist
+else if (jobType.includes("uber driver")) iconClass = "fa-car", bgColor = "#26a69a";  // Uber Driver
+else if (jobType.includes("trainer")) iconClass = "fa-dumbbell", bgColor = "#ff5722";  // Trainer
+else if (jobType.includes("security")) iconClass = "fa-shield-alt", bgColor = "#607d8b";  // Security Guard
+else if (jobType.includes("shamba boy")) iconClass = "fa-seedling", bgColor = "#388e3c";  // Shamba Boy
+else if (jobType.includes("maid")) iconClass = "fa-broom", bgColor = "#8bc34a";  // Maid
+
     else if (jobType.includes("chef")) iconClass = "fa-utensils", bgColor = "#8d6e63";
 
     const iconHTML = `
@@ -4135,10 +4372,78 @@ function updateFollowedCount(jobId) {
   });
 }
 
+// Function to handle showing interest and updating followed count
+function showInterest(jobId) {
+  const userId = firebase.auth().currentUser?.uid; // Get the current user's ID using Firebase Authentication
+  if (!userId) {
+    alert("Please log in to show interest.");
+    return;
+  }
+
+  const followedCountElement = document.getElementById(`followed-count-${jobId}`);
+
+  // Reference to the Firestore document for the job
+  const jobRef = firebase.firestore().doc(`bomJobs/${jobId}`);
+
+  // Fetch the current job data to check if the user has already shown interest
+  jobRef.get().then(docSnapshot => {
+    if (!docSnapshot.exists) {
+      console.error("Job not found!");
+      return;
+    }
+
+    const jobData = docSnapshot.data();
+    const alreadyFollowed = jobData.followedUsers && jobData.followedUsers.includes(userId);
+
+    if (alreadyFollowed) {
+      alert("You have already shown interest in this job!");
+      return;  // Prevent further interaction if already interested
+    }
+
+    // If user has not shown interest, update the followed count
+    let followedCount = jobData.followedCount || 0;
+    followedCount++;
+
+    // Add the user's ID to the list of followed users (to track who is interested)
+    const updatedFollowedUsers = jobData.followedUsers || [];
+    updatedFollowedUsers.push(userId);
+
+    // Update the Firestore document
+    jobRef.update({
+      followedCount: followedCount,
+      followedUsers: updatedFollowedUsers,
+    })
+    .then(() => {
+      // Update the UI with the new followed count
+      followedCountElement.innerText = `${followedCount} people following`;
+      console.log("Followed count updated successfully.");
+
+      // Send an admin notification about the user's interest
+      const notifRef = firebase.firestore().collection("adminNotifications").doc();
+      notifRef.set({
+        type: "Job Interest",
+        jobId: jobId,
+        userId: userId,
+        message: `📌 User with ID ${userId} has shown interest in job ${jobId}.`,
+        timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+      });
+
+      console.log("Admin notification sent for job interest.");
+
+    })
+    .catch((error) => {
+      console.error("Error updating followed count: ", error);
+    });
+  }).catch((error) => {
+    console.error("Error fetching job data: ", error);
+  });
+}
+
 // Call this function when the page is loaded or refreshed to sync the followed count
 function onPageLoad(jobId) {
   updateFollowedCount(jobId);
 }
+
 
 // Function to handle showing interest in a job
 function showInterest(jobId) {
@@ -4185,6 +4490,19 @@ function showInterest(jobId) {
       // Update the UI with the new interest count
       interestCountElement.innerText = `${interestCount} people interested`;
       console.log("Interest count updated successfully.");
+
+      // Send an admin notification about the user's interest
+      const notifRef = firebase.firestore().collection("adminNotifications").doc();
+      notifRef.set({
+        type: "Job Interest",
+        jobId: jobId,
+        userId: userId,
+        message: `📌 User with ID ${userId} has shown interest in job ${jobId}.`,
+        timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+      });
+
+      console.log("Admin notification sent for job interest.");
+
     })
     .catch((error) => {
       console.error("Error updating interest count: ", error);
@@ -4193,6 +4511,7 @@ function showInterest(jobId) {
     console.error("Error fetching job data: ", error);
   });
 }
+
 
 // Function to update the interest count on page load (in case of page refresh)
 function updateInterestCount(jobId) {
@@ -4218,24 +4537,39 @@ function onPageLoad(jobId) {
   updateInterestCount(jobId);
 }
 
-
 async function closeJob(jobId) {
   try {
+    // Close the job in the database
     await db.collection("bomJobs").doc(jobId).update({
       isClosed: true
     });
+
     showCustomAlert("✅ Job marked as closed.", "success");
-    loadBOMJobs(); // refresh job list
+    loadBOMJobs(); // Refresh job list
+
+    // Send admin notification about the job closure
+    const notifRef = db.collection("adminNotifications").doc();
+    await notifRef.set({
+      type: "Job Closed",
+      jobId: jobId,
+      message: `🔒 A BOM Job with ID ${jobId} has been marked as closed.`,
+      timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+    });
+
+    console.log("Admin notification sent for job closure.");
+
   } catch (error) {
     console.error("❌ Error closing job:", error);
     showCustomAlert("❌ Failed to close job: " + error.message, "error");
   }
 }
+
 async function boostJobFree(jobId) {
   const boostExpiry = new Date();
   boostExpiry.setDate(boostExpiry.getDate() + 7); // 7-day boost
 
   try {
+    // Update the job status with boosted details
     await db.collection("bomJobs").doc(jobId).update({
       isBoosted: true,
       boostExpiry: boostExpiry,
@@ -4243,7 +4577,19 @@ async function boostJobFree(jobId) {
     });
 
     showCustomAlert("✅ Job boosted for FREE by Admin", "success");
-    loadBOMJobs(); // Refresh list
+    loadBOMJobs(); // Refresh the list
+
+    // Send admin notification about the free boost
+    const notifRef = db.collection("adminNotifications").doc();
+    await notifRef.set({
+      type: "Job Boosted Free",
+      jobId: jobId,
+      message: `💥 A BOM Job with ID ${jobId} has been boosted for FREE by Admin.`,
+      timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+    });
+
+    console.log("Admin notification sent for job boost.");
+
   } catch (error) {
     console.error("❌ Error boosting job:", error);
     showCustomAlert("❌ Failed to boost job: " + error.message, "error");
@@ -4262,7 +4608,8 @@ function hasBomJobAccess() {
   return diffDays <= 14; // valid for 2 weeks
 }
 
-function unlockBomJobs() {
+// Function to unlock BOM Job contacts and send admin notification
+async function unlockBomJobs() {
   if (!currentUser || !currentUser.uid) {
     showCustomAlert("Please login to unlock job contacts.", "error");
     return;
@@ -4270,28 +4617,68 @@ function unlockBomJobs() {
 
   showPaymentModalFor("bomjobs", 350, currentUser.uid, "BOM Job Contacts");
 
-  const checkPaid = setInterval(() => {
-    if (localStorage.getItem("paidForBomJobs")) {
+  const checkPaid = setInterval(async () => {
+    if (localStorage.getItem("paidForBomJobs") === "yes") {
       clearInterval(checkPaid);
-      showCustomAlert(" Job contacts unlocked for 2 weeks!", "success");
+      showCustomAlert("Job contacts unlocked for 2 weeks!", "success");
       closeUniversalModal();
       loadBOMJobs(); // re-render if function exists
+
+      // Send admin notification for unlocked BOM job contacts
+      try {
+        const notifRef = db.collection("adminNotifications").doc();
+        await notifRef.set({
+          type: "BOM Job Contact Unlock",
+          userId: currentUser.uid,
+          message: `🔓 ${currentUser.email} has unlocked BOM Job contacts for 2 weeks.`,
+          timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+        });
+
+        console.log("Admin notification sent for unlocked BOM job contacts.");
+      } catch (error) {
+        console.error("Failed to send admin notification:", error);
+      }
     }
   }, 3000);
 }
 
-// ✅ Delete BOM Job
+
+// ✅ Delete BOM Job and send admin notification
 async function confirmDeleteBOMJob(jobId) {
   if (confirm("Are you sure you want to delete this job posting?")) {
     try {
-      await bomRef.doc(jobId).delete();
-      showCustomAlert("✅  job deleted successfully!", "success");
-      loadBOMJobs(); // Refresh the job listings
+      const jobRef = bomRef.doc(jobId);
+      const jobSnap = await jobRef.get();
+      if (!jobSnap.exists) {
+        showCustomAlert("❌ Job not found.", "error");
+        return;
+      }
+
+      const jobData = jobSnap.data();
+      const jobTitle = jobData.title || "Unknown Job";
+
+      // Delete the job posting
+      await jobRef.delete();
+      showCustomAlert("✅ Job deleted successfully!", "success");
+
+      // Send an admin notification
+      const notifRef = db.collection("adminNotifications").doc();
+      await notifRef.set({
+        type: "Job Deletion",
+        itemId: jobId,
+        itemTitle: jobTitle,
+        message: `🚨 BOM job titled "${jobTitle}" was deleted.`,
+        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+      });
+
+      // Refresh the job listings
+      loadBOMJobs(); 
     } catch (err) {
       showCustomAlert("❌ Failed to delete job: " + err.message, "error");
     }
   }
 }
+
 
 // ✅ Update Average Rating
 async function updateAverageRating(jobId) {
@@ -4609,6 +4996,35 @@ async function showLikes(profileId) {
   }
 
   alert(`❤️ Liked by:\n\n${names.join("\n")}`);
+
+  // Send admin notification about the likes being viewed
+  sendAdminNotification(
+    "Soulmate Profile Likes Viewed",
+    currentUser.uid, 
+    `The likes for soulmate profile ID ${profileId} were viewed.`
+  );
+}
+
+// Helper function to send admin notification
+async function sendAdminNotification(type, userId, message) {
+  try {
+    // Get user details (name/email) based on the userId
+    const userSnap = await db.collection("users").doc(userId).get();
+    const user = userSnap.data();
+
+    const notifRef = db.collection("adminNotifications").doc();
+    await notifRef.set({
+      type: type,
+      userId: userId,
+      userName: user ? user.displayName || user.email : "Unknown User",
+      timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+      message: message
+    });
+
+    console.log("Admin notification created: " + message);
+  } catch (error) {
+    console.error("Error sending admin notification:", error);
+  }
 }
 
 async function loadSoulmates() {
@@ -4776,12 +5192,25 @@ async function boostSoulmate(id) {
     boostExpiry.setDate(boostExpiry.getDate() + 7); // 7 days
 
     try {
+      // Update the soulmate profile as boosted
       await soulmateRef.doc(id).update({
         boosted: true,
         boostExpiry: boostExpiry
       });
+
+      // Admin boost success message
       showCustomAlert("✅ Profile boosted for FREE by Admin", "success");
-      loadSoulmates(); // Refresh
+
+      // Send admin notification for boosting the profile
+      const soulmateDoc = await soulmateRef.doc(id).get();
+      const soulmateData = soulmateDoc.data();
+      sendAdminNotification(
+        "Soulmate Profile Boosted (Admin)", 
+        soulmateData.postedBy, 
+        `The soulmate profile "${soulmateData.name}" was boosted for FREE by Admin. Boost expires in 7 days.`
+      );
+
+      loadSoulmates(); // Refresh the list
     } catch (error) {
       console.error("❌ Error boosting soulmate:", error);
       showCustomAlert("❌ Failed to boost profile: " + error.message, "error");
@@ -4793,17 +5222,83 @@ async function boostSoulmate(id) {
   }
 }
 
+// Helper function to send an admin notification
+async function sendAdminNotification(type, userId, message) {
+  try {
+    // Get user details (name/email) based on the userId
+    const userSnap = await db.collection("users").doc(userId).get();
+    const user = userSnap.data();
+
+    const notifRef = db.collection("adminNotifications").doc();
+    await notifRef.set({
+      type: type,
+      userId: userId,
+      userName: user ? user.displayName || user.email : "Unknown User",
+      timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+      message: message
+    });
+
+    console.log("Admin notification created: " + message);
+  } catch (error) {
+    console.error("Error sending admin notification:", error);
+  }
+}
+
+
 
 async function closeSoulmate(id) {
   try {
+    // Fetch the soulmate profile data before updating it
+    const soulmateDoc = await soulmateRef.doc(id).get();
+    const soulmateData = soulmateDoc.data();
+    
+    if (!soulmateData) {
+      showCustomAlert("❌ Soulmate profile not found.", "error");
+      return;
+    }
+
+    // Update the profile to mark it as closed
     await soulmateRef.doc(id).update({
       isClosed: true
     });
+
+    // Show success message
     showCustomAlert("✅ Profile marked as closed.", "success");
-    loadSoulmates(); // Refresh the view
+
+    // Send admin notification
+    sendAdminNotification(
+      "Soulmate Profile Closed", 
+      soulmateData.postedBy, 
+      `The soulmate profile of ${soulmateData.name} has been marked as closed.`
+    );
+
+    // Refresh the view
+    loadSoulmates();
   } catch (error) {
     console.error("❌ Error closing soulmate profile:", error);
     showCustomAlert("❌ Failed to close profile: " + error.message, "error");
+  }
+}
+
+// Helper function to send an admin notification
+async function sendAdminNotification(type, userId, message) {
+  try {
+    // Get user details (name/email) based on the userId
+    const userSnap = await db.collection("users").doc(userId).get();
+    const user = userSnap.data();
+
+    const notifRef = db.collection("adminNotifications").doc();
+    await notifRef.set({
+      type: type,
+      userId: userId,
+      userName: user ? user.displayName || user.email : "Unknown User",
+      timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+      message: message
+    });
+
+    console.log("Admin notification created: " + message);
+  } catch (error) {
+    console.error("Error sending admin notification:", error);
   }
 }
 
@@ -4888,17 +5383,50 @@ function unlockSoulmateContacts() {
     return;
   }
 
+  // Show the payment modal for unlocking soulmate contacts
   showPaymentModalFor("soulmate", 200, currentUser.uid, "Soulmate Contacts");
 
   const checkPaid = setInterval(() => {
     if (localStorage.getItem("paidForSoulmates") === "yes") {
       clearInterval(checkPaid);
+
+      // Show success message
       showCustomAlert("Contacts unlocked! Reloading...", "success");
+
+      // Close any open modal
       closeUniversalModal();
+
+      // Reload soulmates
       loadSoulmates();
+
+      // ✅ Send admin notification about contact unlocking
+      sendAdminNotification("Soulmate Contacts Unlocked", currentUser.uid, "Soulmate contacts have been unlocked.");
     }
   }, 3000);
 }
+
+// Helper function to send an admin notification
+async function sendAdminNotification(type, userId, message) {
+  try {
+    // Get user details (name/email) based on the userId
+    const userSnap = await db.collection("users").doc(userId).get();
+    const user = userSnap.data();
+
+    const notifRef = db.collection("adminNotifications").doc();
+    await notifRef.set({
+      type: type,
+      userId: userId,
+      userName: user ? user.displayName || user.email : "Unknown User",
+      timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+      message: message
+    });
+
+    console.log("Admin notification created: " + message);
+  } catch (error) {
+    console.error("Error sending admin notification:", error);
+  }
+}
+
 
 
 function showSoulmateModal(data) {
@@ -5414,10 +5942,87 @@ async function loadServices() {
     const occupation = d.occupation?.toLowerCase?.() || "";
     let iconClass = "fa-user-tie", bgColor = "#607d8b";
     if (occupation.includes("lawyer")) iconClass = "fa-balance-scale", bgColor = "#5c6bc0";
-    else if (occupation.includes("teacher")) iconClass = "fa-chalkboard-teacher", bgColor = "#42a5f5";
-    else if (occupation.includes("driver")) iconClass = "fa-car", bgColor = "#26a69a";
-    else if (occupation.includes("nurse")) iconClass = "fa-user-nurse", bgColor = "#ec407a";
-    else if (occupation.includes("chef")) iconClass = "fa-utensils", bgColor = "#ffa726";
+ else if (occupation.includes("teacher")) iconClass = "fa-chalkboard-teacher", bgColor = "#42a5f5";
+else if (occupation.includes("driver")) iconClass = "fa-car", bgColor = "#26a69a";
+else if (occupation.includes("nurse")) iconClass = "fa-user-nurse", bgColor = "#ec407a";
+else if (occupation.includes("chef")) iconClass = "fa-utensils", bgColor = "#ffa726";
+else if (occupation.includes("developer")) iconClass = "fa-laptop-code", bgColor = "#42a5f5";  // Software Developer
+else if (occupation.includes("designer")) iconClass = "fa-paint-brush", bgColor = "#9c27b0";  // Designer (e.g., UI/UX)
+else if (occupation.includes("engineer")) iconClass = "fa-cogs", bgColor = "#0288d1";  // Engineer
+else if (occupation.includes("manager")) iconClass = "fa-users-cog", bgColor = "#8e24aa";  // Manager
+else if (occupation.includes("doctor")) iconClass = "fa-stethoscope", bgColor = "#f44336";  // Doctor
+else if (occupation.includes("scientist")) iconClass = "fa-flask", bgColor = "#9e9e9e";  // Scientist
+else if (occupation.includes("architect")) iconClass = "fa-building", bgColor = "#5f6368";  // Architect
+else if (occupation.includes("photographer")) iconClass = "fa-camera", bgColor = "#607d8b";  // Photographer
+else if (occupation.includes("plumber")) iconClass = "fa-wrench", bgColor = "#3f51b5";  // Plumber
+else if (occupation.includes("electrician")) iconClass = "fa-bolt", bgColor = "#ffc107";  // Electrician
+else if (occupation.includes("social worker")) iconClass = "fa-users", bgColor = "#673ab7";  // Social Worker
+else if (occupation.includes("cleaner")) iconClass = "fa-broom", bgColor = "#00bcd4";  // Cleaner
+else if (occupation.includes("counselor")) iconClass = "fa-headset", bgColor = "#f06292";  // Counselor
+else if (occupation.includes("bartender")) iconClass = "fa-glass-cheers", bgColor = "#795548";  // Bartender
+else if (occupation.includes("waiter")) iconClass = "fa-utensils", bgColor = "#ff5722";  // Waiter
+else if (occupation.includes("dancer")) iconClass = "fa-dance", bgColor = "#f06292";  // Dancer
+else if (occupation.includes("editor")) iconClass = "fa-pen", bgColor = "#4caf50";  // Editor
+else if (occupation.includes("receptionist")) iconClass = "fa-address-book", bgColor = "#2196f3";  // Receptionist
+else if (occupation.includes("real estate agent")) iconClass = "fa-building", bgColor = "#8bc34a";  // Real Estate Agent
+else if (occupation.includes("sales manager")) iconClass = "fa-users", bgColor = "#9c27b0";  // Sales Manager
+else if (occupation.includes("mechanic")) iconClass = "fa-cogs", bgColor = "#ff9800";  // Mechanic
+else if (occupation.includes("construction worker")) iconClass = "fa-hard-hat", bgColor = "#795548";  // Construction Worker
+else if (occupation.includes("bus driver")) iconClass = "fa-bus", bgColor = "#0288d1";  // Bus Driver
+else if (occupation.includes("web designer")) iconClass = "fa-laptop-code", bgColor = "#42a5f5";  // Web Designer
+else if (occupation.includes("hr manager")) iconClass = "fa-users-cog", bgColor = "#8bc34a";  // HR Manager
+else if (occupation.includes("programmer")) iconClass = "fa-code", bgColor = "#4caf50";  // Programmer
+else if (occupation.includes("event planner")) iconClass = "fa-calendar-alt", bgColor = "#ff9800";  // Event Planner
+else if (occupation.includes("translator")) iconClass = "fa-language", bgColor = "#9c27b0";  // Translator
+else if (occupation.includes("marketer")) iconClass = "fa-bullhorn", bgColor = "#ff5722";  // Marketer
+else if (occupation.includes("business analyst")) iconClass = "fa-chart-line", bgColor = "#673ab7";  // Business Analyst
+else if (occupation.includes("pharmacist")) iconClass = "fa-capsules", bgColor = "#f44336";  // Pharmacist
+else if (occupation.includes("social media manager")) iconClass = "fa-share-alt", bgColor = "#00bcd4";  // Social Media Manager
+else if (occupation.includes("customer support")) iconClass = "fa-headphones", bgColor = "#9e9e9e";  // Customer Support
+else if (occupation.includes("journalist")) iconClass = "fa-newspaper", bgColor = "#607d8b";  // Journalist
+else if (occupation.includes("chemist")) iconClass = "fa-flask", bgColor = "#9e9e9e";  // Chemist
+else if (occupation.includes("fitness trainer")) iconClass = "fa-dumbbell", bgColor = "#ff5722";  // Fitness Trainer
+else if (occupation.includes("veterinarian")) iconClass = "fa-paw", bgColor = "#ff9800";  // Veterinarian
+else if (occupation.includes("barber")) iconClass = "fa-scissors", bgColor = "#2196f3";  // Barber
+else if (occupation.includes("hair stylist")) iconClass = "fa-cut", bgColor = "#e91e63";  // Hair Stylist
+else if (occupation.includes("teacher assistant")) iconClass = "fa-chalkboard", bgColor = "#42a5f5";  // Teacher Assistant
+else if (occupation.includes("biologist")) iconClass = "fa-leaf", bgColor = "#4caf50";  // Biologist
+else if (occupation.includes("editor-in-chief")) iconClass = "fa-pencil-alt", bgColor = "#673ab7";  // Editor-in-Chief
+else if (occupation.includes("author")) iconClass = "fa-book", bgColor = "#9e9e9e";  // Author
+else if (occupation.includes("librarian")) iconClass = "fa-book-reader", bgColor = "#3f51b5";  // Librarian
+else if (occupation.includes("geologist")) iconClass = "fa-globe", bgColor = "#0288d1";  // Geologist
+else if (occupation.includes("actuary")) iconClass = "fa-calculator", bgColor = "#f44336";  // Actuary
+else if (occupation.includes("public relations")) iconClass = "fa-users", bgColor = "#e91e63";  // Public Relations
+else if (occupation.includes("yoga instructor")) iconClass = "fa-spa", bgColor = "#8bc34a";  // Yoga Instructor
+else if (occupation.includes("paramedic")) iconClass = "fa-ambulance", bgColor = "#f44336";  // Paramedic
+else if (occupation.includes("tour guide")) iconClass = "fa-map-marked-alt", bgColor = "#9c27b0";  // Tour Guide
+else if (occupation.includes("lumberjack")) iconClass = "fa-tree", bgColor = "#4caf50";  // Lumberjack
+else if (occupation.includes("firefighter")) iconClass = "fa-fire", bgColor = "#f44336";  // Firefighter
+else if (occupation.includes("flight attendant")) iconClass = "fa-plane", bgColor = "#2196f3";  // Flight Attendant
+else if (occupation.includes("civil engineer")) iconClass = "fa-hard-hat", bgColor = "#8bc34a";  // Civil Engineer
+else if (occupation.includes("real estate broker")) iconClass = "fa-home", bgColor = "#607d8b";  // Real Estate Broker
+else if (occupation.includes("tax consultant")) iconClass = "fa-calculator", bgColor = "#ff5722";  // Tax Consultant
+else if (occupation.includes("business consultant")) iconClass = "fa-briefcase", bgColor = "#673ab7";  // Business Consultant
+else if (occupation.includes("data scientist")) iconClass = "fa-database", bgColor = "#0288d1";  // Data Scientist
+else if (occupation.includes("security analyst")) iconClass = "fa-shield-alt", bgColor = "#4caf50";  // Security Analyst
+else if (occupation.includes("event coordinator")) iconClass = "fa-calendar-alt", bgColor = "#ff9800";  // Event Coordinator
+else if (occupation.includes("copywriter")) iconClass = "fa-pencil-alt", bgColor = "#607d8b";  // Copywriter
+else if (occupation.includes("marketing manager")) iconClass = "fa-bullhorn", bgColor = "#ff5722";  // Marketing Manager
+else if (occupation.includes("network administrator")) iconClass = "fa-server", bgColor = "#42a5f5";  // Network Administrator
+else if (occupation.includes("AI specialist")) iconClass = "fa-robot", bgColor = "#9e9e9e";  // AI Specialist
+else if (occupation.includes("system analyst")) iconClass = "fa-laptop", bgColor = "#4caf50";  // System Analyst
+else if (occupation.includes("radiologist")) iconClass = "fa-x-ray", bgColor = "#f44336";  // Radiologist
+else if (occupation.includes("personal assistant")) iconClass = "fa-user-tie", bgColor = "#3f51b5";  // Personal Assistant
+else if (occupation.includes("IT consultant")) iconClass = "fa-laptop", bgColor = "#0288d1";  // IT Consultant
+else if (occupation.includes("sound engineer")) iconClass = "fa-headphones", bgColor = "#ff5722";  // Sound Engineer
+else if (occupation.includes("public speaker")) iconClass = "fa-volume-up", bgColor = "#8e24aa";  // Public Speaker
+else if (occupation.includes("app developer")) iconClass = "fa-code", bgColor = "#4caf50";  // App Developer
+else if (occupation.includes("teacher")) iconClass = "fa-chalkboard-teacher", bgColor = "#42a5f5";
+else if (occupation.includes("driver")) iconClass = "fa-car", bgColor = "#26a69a";  // Driver
+else if (occupation.includes("uber driver")) iconClass = "fa-car", bgColor = "#26a69a";  // Uber Driver
+else if (occupation.includes("clerk")) iconClass = "fa-file-alt", bgColor = "#8bc34a";  // Clerk
+else if (occupation.includes("shamba boy")) iconClass = "fa-leaf", bgColor = "#4caf50";  // Shamba Boy
+
     else if (occupation.includes("plumber")) iconClass = "fa-tools", bgColor = "#7e57c2";
 
     const iconHTML = `
@@ -5531,7 +6136,6 @@ async function boostServiceDirectly(serviceId) {
     showCustomAlert("❌ Failed to boost service: " + err.message, "error");
   }
 }
-
 async function postService() {
   if (!currentUser) {
     showCustomAlert("Please login first.", "error");
@@ -5566,7 +6170,7 @@ async function postService() {
     }
 
     // ✅ Post service to Firestore
-    await servicesRef.add({
+    const serviceRef = await servicesRef.add({
       name,
       phone,
       county,
@@ -5580,6 +6184,19 @@ async function postService() {
 
     showCustomAlert("Service posted successfully!", "success");
 
+    // ✅ Send admin notification about the new service post
+    const notifRef = db.collection("adminNotifications").doc();
+    await notifRef.set({
+      type: "New Service Posted",
+      itemId: serviceRef.id,
+      itemName: name,
+      postedBy: currentUser.displayName || currentUser.email,
+      timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+      message: `${currentUser.displayName || currentUser.email} has posted a new service: "${name}".`
+    });
+
+    console.log("Admin notification created for new service");
+
     // Clear form fields
     document.getElementById("serviceForm").reset();
 
@@ -5592,7 +6209,8 @@ async function postService() {
   }
 }
 
-function unlockServiceContacts() {
+
+async function unlockServiceContacts() {
   if (!currentUser || !currentUser.uid) {
     showCustomAlert("Please login to unlock service contacts.", "error");
     return;
@@ -5600,15 +6218,27 @@ function unlockServiceContacts() {
 
   showPaymentModalFor("service", 200, currentUser.uid, "Service Provider Contacts");
 
-  const checkPaid = setInterval(() => {
+  const checkPaid = setInterval(async () => {
     if (localStorage.getItem("paidForService") === "yes") {
       clearInterval(checkPaid);
+      
+      // Create Admin Notification when the service contacts are unlocked
+      const notifRef = db.collection("adminNotifications").doc();
+      await notifRef.set({
+        type: "Service Contacts Unlocked",
+        userId: currentUser.uid,
+        userName: currentUser.displayName || currentUser.email,
+        timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+        message: `${currentUser.displayName || currentUser.email} has unlocked service provider contacts after making a payment.`
+      });
+
       showCustomAlert("Service provider contacts unlocked!", "success");
       closeUniversalModal();
-      loadServices(); // reload services to show contacts
+      loadServices(); // Reload services to show contacts
     }
   }, 3000);
 }
+
 
 // ✅ Show toast message (success or error)
 function showToast(message, type = "success") {
@@ -5653,16 +6283,41 @@ function promptToast(message, onConfirm) {
 }
 
 
-// ✅ Delete service using promptToast + showToast
 async function deleteService(id) {
   promptToast("Are you sure you want to delete this service?", async (confirmed) => {
     if (confirmed) {
       try {
+        const serviceDoc = await servicesRef.doc(id).get();
+        if (!serviceDoc.exists) {
+          showToast("Service not found.", "error");
+          return;
+        }
+
+        const serviceData = serviceDoc.data();
+        const serviceName = serviceData.name || "Unknown Service";
+        const deletedBy = currentUser.displayName || currentUser.email;
+
+        // Delete the service
         await servicesRef.doc(id).delete();
         showToast("Service deleted successfully.", "success");
-        loadServices();
+        loadServices(); // Refresh the list
+
+        // Create Admin Notification about Service Deletion
+        const notifRef = db.collection("adminNotifications").doc();
+        await notifRef.set({
+          type: "Service Deleted",
+          itemId: id,
+          itemName: serviceName,
+          deletedBy: deletedBy,
+          timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+          message: `❌ Service "${serviceName}" has been deleted by ${deletedBy}.`
+        });
+
+        console.log("Admin notification created for service deletion");
+
       } catch (err) {
         showToast("Error deleting: " + err.message, "error");
+        console.error("Error deleting service:", err);
       }
     } else {
       showToast("Deletion cancelled.", "error");
@@ -5966,6 +6621,46 @@ async function loadMarketItems() {
     showCustomAlert("❌ Failed to load items: " + err.message, "error");
   }
 }
+
+async function reportMarketItem(itemId) {
+  showReportConfirmModal(async () => {
+    const user = firebase.auth().currentUser;
+    if (!user) return showCustomAlert("⚠️ You must be logged in to report an item.", "warning");
+
+    try {
+      const reportRef = db.collection("marketReports").doc();
+      const notifRef = db.collection("adminNotifications").doc();
+      const itemSnap = await marketRef.doc(itemId).get();
+      const item = itemSnap.data();
+
+      // Save the report to Firestore
+      await reportRef.set({
+        itemId,
+        reportedBy: user.uid,
+        reporterName: user.displayName || user.email,
+        itemName: item?.name || "Item",
+        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+      });
+
+      // Create the admin notification
+      await notifRef.set({
+        type: "Market Report",
+        itemId,
+        itemName: item?.name || "Item",
+        reportedBy: user.displayName || user.email,
+        timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+        message: `🚩 Market item "${item?.name}" was reported by ${user.displayName || user.email}.`
+      });
+
+      showCustomAlert("✅ Report submitted. Admin will review it shortly.", "success");
+    } catch (error) {
+      console.error("❌ Report failed:", error);
+      showCustomAlert("❌ Could not report the item. Try again.", "error");
+    }
+  });
+}
+
+
 async function showMarketInterest(itemId) {
   const user = firebase.auth().currentUser;
 
@@ -6007,11 +6702,33 @@ async function showMarketInterest(itemId) {
       timestamp: firebase.firestore.FieldValue.serverTimestamp()
     });
 
+    // Send admin notification
+    await sendMarketInterestNotification(itemId, user.displayName || user.email);
+
     showCustomAlert("✅ Your interest has been recorded!", "success");
   } catch (err) {
     console.error("Error recording interest:", err);
     showCustomAlert("❌ Failed to record your interest. Please try again later.", "error");
   }
+}
+
+// Create a notification for admins when a user expresses interest
+async function sendMarketInterestNotification(itemId, userName) {
+  const itemRef = db.collection("marketItems").doc(itemId);
+  const itemSnap = await itemRef.get();
+  const item = itemSnap.data();
+
+  const notificationRef = db.collection("adminNotifications").doc(); // New notification for admin
+
+  await notificationRef.set({
+    type: "Market Interest",
+    message: `${userName} has expressed interest in "${item?.name || "this item"}".`,
+    itemId: itemId,
+    timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+    read: false // Initially marked as unread
+  });
+
+  // Optionally, send other admin alerts (e.g., email or push notifications) here
 }
 
 async function openEditForm(itemId) {
@@ -6075,86 +6792,7 @@ async function saveItemChanges(itemId) {
     showCustomAlert("❌ Failed to update item. Try again later.", "error");
   }
 }
-async function showMarketInterest(itemId) {
-  console.log('Show Interest function triggered for item:', itemId); // Debugging line
-  const user = firebase.auth().currentUser;
 
-  if (!user) {
-    showCustomAlert("🔐 You need to be logged in to express interest.", "info");
-    return;
-  }
-
-  const interestRef = db.collection("marketItems").doc(itemId).collection("interests").doc(user.uid);
-  console.log('Interest ref:', interestRef); // Debugging Firestore reference
-
-  const interestDoc = await interestRef.get();
-  console.log('Interest document exists:', interestDoc.exists); // Debugging Firestore document existence
-
-  if (interestDoc.exists) {
-    showCustomAlert("❌ You have already expressed interest in this item.", "info");
-    return;
-  }
-
-  // Updating the UI with the new interest count
-  const interestCountElement = document.getElementById(`marketInterestCount-${itemId}`);
-  console.log('Interest count element:', interestCountElement); // Debugging the count element
-
-  if (interestCountElement) {
-    let interestCount = parseInt(interestCountElement.innerText) || 0;
-    interestCount += 1;
-    interestCountElement.innerText = interestCount;
-    console.log("Updated interest count:", interestCount);
-  }
-
-  try {
-    // Save the user's interest to Firestore
-    await interestRef.set({
-      userId: user.uid,
-      timestamp: firebase.firestore.FieldValue.serverTimestamp()
-    });
-
-    showCustomAlert("✅ Your interest has been recorded!", "success");
-  } catch (err) {
-    console.error("Error recording interest:", err);
-    showCustomAlert("❌ Failed to record your interest. Please try again later.", "error");
-  }
-}
-
-async function reportMarketItem(itemId) {
-  showReportConfirmModal(async () => {
-    const user = firebase.auth().currentUser;
-    if (!user) return showCustomAlert("⚠️ You must be logged in to report an item.", "warning");
-
-    try {
-      const reportRef = db.collection("marketReports").doc();
-      const notifRef = db.collection("adminNotifications").doc();
-      const itemSnap = await marketRef.doc(itemId).get();
-      const item = itemSnap.data();
-
-      await reportRef.set({
-        itemId,
-        reportedBy: user.uid,
-        reporterName: user.displayName || user.email,
-        itemName: item?.name || "Item",
-        timestamp: firebase.firestore.FieldValue.serverTimestamp()
-      });
-
-      await notifRef.set({
-        type: "marketReport",
-        itemId,
-        itemName: item?.name || "Item",
-        reportedBy: user.displayName || user.email,
-        time: firebase.firestore.FieldValue.serverTimestamp(),
-        message: `🚩 Market item "${item?.name}" was reported.`
-      });
-
-      showCustomAlert("✅ Report submitted. Admin will review it shortly.", "success");
-    } catch (error) {
-      console.error("❌ Report failed:", error);
-      showCustomAlert("❌ Could not report the item. Try again.", "error");
-    }
-  });
-}
 function showReportConfirmModal(onConfirm) {
   const overlay = document.createElement("div");
   overlay.style.cssText = `
@@ -6266,13 +6904,26 @@ async function boostMarketItem(id) {
 
     showCustomAlert("✅ Item boosted successfully (admin).", "success");
     loadMarketItems(); // Refresh the list to reflect the change
+
+    // Create Admin Notification about Boost (Even for Admin boost)
+    const notifRef = db.collection("adminNotifications").doc();
+    await notifRef.set({
+      type: "Item Boosted",
+      itemId: id,
+      itemName: data.name,
+      boostedBy: currentUser.displayName || currentUser.email,
+      timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+      message: `🚀 Item "${data.name}" has been boosted by ${currentUser.displayName || currentUser.email} (Admin).`
+    });
+
+    console.log("Admin notification created for item boost");
+
   } catch (err) {
     console.error("❌ Boost error:", err);
     showCustomAlert("❌ Failed to boost: " + err.message, "error");
   }
 }
 
-// ✅ ADD THIS FUNCTION BELOW
 async function toggleSoldStatus(itemId) {
   try {
     const doc = await marketRef.doc(itemId).get();
@@ -6290,11 +6941,26 @@ async function toggleSoldStatus(itemId) {
 
     showCustomAlert(`✔️ Item marked as ${newStatus ? "Sold Out" : "Available"}`, "success");
     loadMarketItems(); // Refresh the list
+
+    // Create Admin Notification about Sold Out Status
+    const notifRef = db.collection("adminNotifications").doc();
+    await notifRef.set({
+      type: newStatus ? "Item Sold Out" : "Item Available",
+      itemId: itemId,
+      itemName: data.name,
+      postedBy: data.postedBy,
+      timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+      message: `🛒 Item "${data.name}" has been marked as ${newStatus ? "Sold Out" : "Available"} by ${data.postedBy}.`
+    });
+
+    console.log("Admin notification created for item sold out status");
+
   } catch (error) {
     console.error("❌ Error updating item status:", error);
     showCustomAlert("❌ Failed to update item status: " + error.message, "error");
   }
 }
+
 
 // Function to update the button state when the item status changes in Firestore
 function updateSoldOutButtonState(id) {
@@ -7084,7 +7750,7 @@ async function loadAdminNotifications() {
 
     const li = document.createElement("li");
     li.style.cssText = "margin-bottom:10px;padding:10px;border:1px solid #ccc;border-radius:8px;background:#f9f9f9;cursor:pointer;";
-    
+
     // ✅ Handle click to scroll to item
     li.onclick = () => openPostedItem(d.type?.toLowerCase(), d.itemId);
 
@@ -7101,8 +7767,27 @@ async function loadAdminNotifications() {
   await batch.commit(); // ✅ Apply read updates
   updateAdminNotifBadge(); // 🔄 Refresh badge
 }
+async function updateAdminNotifBadge() {
+  const badge = document.getElementById("notifBadge");
+  if (!isAdmin || !badge) return;
 
+  try {
+    const snapshot = await db.collection("adminNotifications")
+      .where("read", "==", false)
+      .get();
 
+    const count = snapshot.size;
+
+    if (count > 0) {
+      badge.style.display = "inline-block";
+      badge.textContent = count;
+    } else {
+      badge.style.display = "none";
+    }
+  } catch (err) {
+    console.error("Failed to load notification badge:", err);
+  }
+}
 async function deleteNotification(id) {
   // Remove any existing confirmation box
   const existingBox = document.getElementById("inlineNotifConfirmBox");
@@ -7133,22 +7818,8 @@ async function deleteNotification(id) {
       Are you sure you want to delete this notification?
     </p>
     <div style="display: flex; justify-content: center; gap: 10px;">
-      <button id="notifConfirmYesBtn" style="
-        background: #d32f2f;
-        color: white;
-        border: none;
-        border-radius: 6px;
-        padding: 8px 16px;
-        cursor: pointer;
-      ">🗑️ Yes</button>
-      <button id="notifConfirmNoBtn" style="
-        background: #607d8b;
-        color: white;
-        border: none;
-        border-radius: 6px;
-        padding: 8px 16px;
-        cursor: pointer;
-      ">Cancel</button>
+      <button id="notifConfirmYesBtn" style="background: #d32f2f; color: white; border: none; border-radius: 6px; padding: 8px 16px; cursor: pointer;">🗑️ Yes</button>
+      <button id="notifConfirmNoBtn" style="background: #607d8b; color: white; border: none; border-radius: 6px; padding: 8px 16px; cursor: pointer;">Cancel</button>
     </div>
   `;
 
@@ -7173,27 +7844,7 @@ async function deleteNotification(id) {
   };
 }
 
-async function updateAdminNotifBadge() {
-  const badge = document.getElementById("notifBadge");
-  if (!isAdmin || !badge) return;
 
-  try {
-    const snapshot = await db.collection("adminNotifications")
-      .where("read", "==", false)
-      .get();
-
-    const count = snapshot.size;
-
-    if (count > 0) {
-      badge.style.display = "inline-block";
-      badge.textContent = count;
-    } else {
-      badge.style.display = "none";
-    }
-  } catch (err) {
-    console.error("Failed to load notification badge:", err);
-  }
-}
 async function viewConversation(userA, userB) {
   const chatId = [userA, userB].sort().join("_");
   const container = document.getElementById("chatMessages");
@@ -7297,27 +7948,6 @@ function openPostedItem(type, itemId) {
   tryScroll();
 }
 
-function renderNotifications(notifications) {
-  const container = document.getElementById("notificationsContainer");
-  container.innerHTML = "";
-
-  if (!notifications.length) {
-    container.innerHTML = `<p>No notifications yet.</p>`;
-    return;
-  }
-
-  notifications.forEach(n => {
-    const card = document.createElement("div");
-    card.className = "notif-card";
-    card.innerHTML = `
-      <div onclick="openPostedItem('${n.type}', '${n.itemId}')"
-        style="cursor:pointer; background:#f1f8e9; padding:10px; margin-bottom:6px; border-radius:6px;">
-        🔔 ${n.message}
-      </div>
-    `;
-    container.appendChild(card);
-  });
-}
 function toggleEmojiPicker() {
   const picker = document.getElementById("emojiPicker");
   picker.style.display = picker.style.display === "block" ? "none" : "block";
