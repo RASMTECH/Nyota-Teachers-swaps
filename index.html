@@ -5934,90 +5934,17 @@ async function loadServices() {
         </span>`;
     }
 
+    // Interest Count
+    const interestCount = d.interestedUsers ? d.interestedUsers.length : 0;
+    const interestCountText = `${interestCount} ${interestCount === 1 ? "person" : "people"} interested`;
+
     const occupation = d.occupation?.toLowerCase?.() || "";
     let iconClass = "fa-user-tie", bgColor = "#607d8b";
     if (occupation.includes("lawyer")) iconClass = "fa-balance-scale", bgColor = "#5c6bc0";
- else if (occupation.includes("teacher")) iconClass = "fa-chalkboard-teacher", bgColor = "#42a5f5";
-else if (occupation.includes("driver")) iconClass = "fa-car", bgColor = "#26a69a";
-else if (occupation.includes("nurse")) iconClass = "fa-user-nurse", bgColor = "#ec407a";
-else if (occupation.includes("chef")) iconClass = "fa-utensils", bgColor = "#ffa726";
-else if (occupation.includes("developer")) iconClass = "fa-laptop-code", bgColor = "#42a5f5";  // Software Developer
-else if (occupation.includes("designer")) iconClass = "fa-paint-brush", bgColor = "#9c27b0";  // Designer (e.g., UI/UX)
-else if (occupation.includes("engineer")) iconClass = "fa-cogs", bgColor = "#0288d1";  // Engineer
-else if (occupation.includes("manager")) iconClass = "fa-users-cog", bgColor = "#8e24aa";  // Manager
-else if (occupation.includes("doctor")) iconClass = "fa-stethoscope", bgColor = "#f44336";  // Doctor
-else if (occupation.includes("scientist")) iconClass = "fa-flask", bgColor = "#9e9e9e";  // Scientist
-else if (occupation.includes("architect")) iconClass = "fa-building", bgColor = "#5f6368";  // Architect
-else if (occupation.includes("photographer")) iconClass = "fa-camera", bgColor = "#607d8b";  // Photographer
-else if (occupation.includes("plumber")) iconClass = "fa-wrench", bgColor = "#3f51b5";  // Plumber
-else if (occupation.includes("electrician")) iconClass = "fa-bolt", bgColor = "#ffc107";  // Electrician
-else if (occupation.includes("social worker")) iconClass = "fa-users", bgColor = "#673ab7";  // Social Worker
-else if (occupation.includes("cleaner")) iconClass = "fa-broom", bgColor = "#00bcd4";  // Cleaner
-else if (occupation.includes("counselor")) iconClass = "fa-headset", bgColor = "#f06292";  // Counselor
-else if (occupation.includes("bartender")) iconClass = "fa-glass-cheers", bgColor = "#795548";  // Bartender
-else if (occupation.includes("waiter")) iconClass = "fa-utensils", bgColor = "#ff5722";  // Waiter
-else if (occupation.includes("dancer")) iconClass = "fa-dance", bgColor = "#f06292";  // Dancer
-else if (occupation.includes("editor")) iconClass = "fa-pen", bgColor = "#4caf50";  // Editor
-else if (occupation.includes("receptionist")) iconClass = "fa-address-book", bgColor = "#2196f3";  // Receptionist
-else if (occupation.includes("real estate agent")) iconClass = "fa-building", bgColor = "#8bc34a";  // Real Estate Agent
-else if (occupation.includes("sales manager")) iconClass = "fa-users", bgColor = "#9c27b0";  // Sales Manager
-else if (occupation.includes("mechanic")) iconClass = "fa-cogs", bgColor = "#ff9800";  // Mechanic
-else if (occupation.includes("construction worker")) iconClass = "fa-hard-hat", bgColor = "#795548";  // Construction Worker
-else if (occupation.includes("bus driver")) iconClass = "fa-bus", bgColor = "#0288d1";  // Bus Driver
-else if (occupation.includes("web designer")) iconClass = "fa-laptop-code", bgColor = "#42a5f5";  // Web Designer
-else if (occupation.includes("hr manager")) iconClass = "fa-users-cog", bgColor = "#8bc34a";  // HR Manager
-else if (occupation.includes("programmer")) iconClass = "fa-code", bgColor = "#4caf50";  // Programmer
-else if (occupation.includes("event planner")) iconClass = "fa-calendar-alt", bgColor = "#ff9800";  // Event Planner
-else if (occupation.includes("translator")) iconClass = "fa-language", bgColor = "#9c27b0";  // Translator
-else if (occupation.includes("marketer")) iconClass = "fa-bullhorn", bgColor = "#ff5722";  // Marketer
-else if (occupation.includes("business analyst")) iconClass = "fa-chart-line", bgColor = "#673ab7";  // Business Analyst
-else if (occupation.includes("pharmacist")) iconClass = "fa-capsules", bgColor = "#f44336";  // Pharmacist
-else if (occupation.includes("social media manager")) iconClass = "fa-share-alt", bgColor = "#00bcd4";  // Social Media Manager
-else if (occupation.includes("customer support")) iconClass = "fa-headphones", bgColor = "#9e9e9e";  // Customer Support
-else if (occupation.includes("journalist")) iconClass = "fa-newspaper", bgColor = "#607d8b";  // Journalist
-else if (occupation.includes("chemist")) iconClass = "fa-flask", bgColor = "#9e9e9e";  // Chemist
-else if (occupation.includes("fitness trainer")) iconClass = "fa-dumbbell", bgColor = "#ff5722";  // Fitness Trainer
-else if (occupation.includes("veterinarian")) iconClass = "fa-paw", bgColor = "#ff9800";  // Veterinarian
-else if (occupation.includes("barber")) iconClass = "fa-scissors", bgColor = "#2196f3";  // Barber
-else if (occupation.includes("hair stylist")) iconClass = "fa-cut", bgColor = "#e91e63";  // Hair Stylist
-else if (occupation.includes("teacher assistant")) iconClass = "fa-chalkboard", bgColor = "#42a5f5";  // Teacher Assistant
-else if (occupation.includes("biologist")) iconClass = "fa-leaf", bgColor = "#4caf50";  // Biologist
-else if (occupation.includes("editor-in-chief")) iconClass = "fa-pencil-alt", bgColor = "#673ab7";  // Editor-in-Chief
-else if (occupation.includes("author")) iconClass = "fa-book", bgColor = "#9e9e9e";  // Author
-else if (occupation.includes("librarian")) iconClass = "fa-book-reader", bgColor = "#3f51b5";  // Librarian
-else if (occupation.includes("geologist")) iconClass = "fa-globe", bgColor = "#0288d1";  // Geologist
-else if (occupation.includes("actuary")) iconClass = "fa-calculator", bgColor = "#f44336";  // Actuary
-else if (occupation.includes("public relations")) iconClass = "fa-users", bgColor = "#e91e63";  // Public Relations
-else if (occupation.includes("yoga instructor")) iconClass = "fa-spa", bgColor = "#8bc34a";  // Yoga Instructor
-else if (occupation.includes("paramedic")) iconClass = "fa-ambulance", bgColor = "#f44336";  // Paramedic
-else if (occupation.includes("tour guide")) iconClass = "fa-map-marked-alt", bgColor = "#9c27b0";  // Tour Guide
-else if (occupation.includes("lumberjack")) iconClass = "fa-tree", bgColor = "#4caf50";  // Lumberjack
-else if (occupation.includes("firefighter")) iconClass = "fa-fire", bgColor = "#f44336";  // Firefighter
-else if (occupation.includes("flight attendant")) iconClass = "fa-plane", bgColor = "#2196f3";  // Flight Attendant
-else if (occupation.includes("civil engineer")) iconClass = "fa-hard-hat", bgColor = "#8bc34a";  // Civil Engineer
-else if (occupation.includes("real estate broker")) iconClass = "fa-home", bgColor = "#607d8b";  // Real Estate Broker
-else if (occupation.includes("tax consultant")) iconClass = "fa-calculator", bgColor = "#ff5722";  // Tax Consultant
-else if (occupation.includes("business consultant")) iconClass = "fa-briefcase", bgColor = "#673ab7";  // Business Consultant
-else if (occupation.includes("data scientist")) iconClass = "fa-database", bgColor = "#0288d1";  // Data Scientist
-else if (occupation.includes("security analyst")) iconClass = "fa-shield-alt", bgColor = "#4caf50";  // Security Analyst
-else if (occupation.includes("event coordinator")) iconClass = "fa-calendar-alt", bgColor = "#ff9800";  // Event Coordinator
-else if (occupation.includes("copywriter")) iconClass = "fa-pencil-alt", bgColor = "#607d8b";  // Copywriter
-else if (occupation.includes("marketing manager")) iconClass = "fa-bullhorn", bgColor = "#ff5722";  // Marketing Manager
-else if (occupation.includes("network administrator")) iconClass = "fa-server", bgColor = "#42a5f5";  // Network Administrator
-else if (occupation.includes("AI specialist")) iconClass = "fa-robot", bgColor = "#9e9e9e";  // AI Specialist
-else if (occupation.includes("system analyst")) iconClass = "fa-laptop", bgColor = "#4caf50";  // System Analyst
-else if (occupation.includes("radiologist")) iconClass = "fa-x-ray", bgColor = "#f44336";  // Radiologist
-else if (occupation.includes("personal assistant")) iconClass = "fa-user-tie", bgColor = "#3f51b5";  // Personal Assistant
-else if (occupation.includes("IT consultant")) iconClass = "fa-laptop", bgColor = "#0288d1";  // IT Consultant
-else if (occupation.includes("sound engineer")) iconClass = "fa-headphones", bgColor = "#ff5722";  // Sound Engineer
-else if (occupation.includes("public speaker")) iconClass = "fa-volume-up", bgColor = "#8e24aa";  // Public Speaker
-else if (occupation.includes("app developer")) iconClass = "fa-code", bgColor = "#4caf50";  // App Developer
-else if (occupation.includes("teacher")) iconClass = "fa-chalkboard-teacher", bgColor = "#42a5f5";
-else if (occupation.includes("driver")) iconClass = "fa-car", bgColor = "#26a69a";  // Driver
-else if (occupation.includes("uber driver")) iconClass = "fa-car", bgColor = "#26a69a";  // Uber Driver
-else if (occupation.includes("clerk")) iconClass = "fa-file-alt", bgColor = "#8bc34a";  // Clerk
-else if (occupation.includes("shamba boy")) iconClass = "fa-leaf", bgColor = "#4caf50";  // Shamba Boy
-
+    else if (occupation.includes("teacher")) iconClass = "fa-chalkboard-teacher", bgColor = "#42a5f5";
+    else if (occupation.includes("driver")) iconClass = "fa-car", bgColor = "#26a69a";
+    else if (occupation.includes("nurse")) iconClass = "fa-user-nurse", bgColor = "#ec407a";
+    else if (occupation.includes("chef")) iconClass = "fa-utensils", bgColor = "#ffa726";
     else if (occupation.includes("plumber")) iconClass = "fa-tools", bgColor = "#7e57c2";
 
     const iconHTML = `
@@ -6046,29 +5973,40 @@ else if (occupation.includes("shamba boy")) iconClass = "fa-leaf", bgColor = "#4
           💳 Pay Ksh 200
         </button>`;
 
-    const showBoostButton = isPoster || isAdminUser;
-    const boostButtonHTML = showBoostButton
-      ? `<button onclick="${isAdminUser
-          ? `boostServiceDirectly('${id}')`
-          : `showPaymentModalFor('serviceBoost', 300, '${id}', '${d.name}')`}"
+    // Action Buttons: Boost, Edit, Delete, and Activate/Deactivate
+    const actionButtonsHTML = `
+      ${isPoster || isAdminUser ? `
+        <button onclick="${isAdminUser ? `boostServiceDirectly('${id}')` : `showPaymentModalFor('serviceBoost', 300, '${id}', '${d.name}')`}"
           style="background:orange; color:white; border:none; padding:6px 12px; border-radius:6px; margin-top:8px;">
           🔥 Boost This Service
-        </button>`
-      : "";
+        </button>` : ''}
+    
+      <button onclick="editService('${id}')" 
+        style="background:#ff9800; color:white; padding:6px 12px; border:none; border-radius:6px; margin-top:6px;">
+        ✏️ Edit Service
+      </button>
 
-    const deleteButtonHTML = (isPoster || isAdminUser)
-      ? `<button onclick="deleteService('${id}')"
+      <button onclick="showReviewModal('${id}')" 
+        style="background:#4caf50; color:white; padding:6px 12px; border:none; border-radius:6px; margin-top:6px;">
+        📝 Leave a Review
+      </button>
+
+      <button onclick="showInterest('${id}')" 
+        style="background:#ff5722; color:white; padding:6px 12px; border:none; border-radius:6px; margin-top:6px;">
+        ❤️ Show Interest
+      </button>
+
+      ${isPoster || isAdminUser ? `
+        <button onclick="deleteService('${id}')"
           style="background:#dc3545; color:white; padding:6px 12px; margin-top:6px; border:none; border-radius:6px;">
           🗑️ Delete
-        </button>` : "";
+        </button>` : ''}
 
-    // Chat Button: Only visible to users who are NOT the poster
-    const chatButtonHTML = !isPoster
-      ? `<button onclick="openChatModal('${d.phone}', '${d.name}')"
-          style="margin-top:6px; background:#673ab7; color:white; border:none; border-radius:4px; padding:6px 12px; cursor:pointer;">
-          💬 Chat
-        </button>`
-      : "";
+      ${isPoster || isAdminUser ? `
+        <button onclick="toggleServiceStatus('${id}')"
+          style="background:#2196F3; color:white; padding:6px 12px; border:none; border-radius:6px; margin-top:6px;">
+          🔄 Activate/Deactivate Service
+        </button>` : ''}`;
 
     const card = document.createElement("div");
     card.className = "service-card";
@@ -6087,27 +6025,41 @@ else if (occupation.includes("shamba boy")) iconClass = "fa-leaf", bgColor = "#4
       transition: all 0.3s ease;
     `;
 
-  card.innerHTML = `
-  ${iconHTML}
-  <div style="padding: 14px; text-align:left;">
-    ${verifiedBadge}
-    <h3 style="margin: 6px 0; color:#00796b;">${d.name} ${boostBadge}</h3>
-    <p style="color:#3f51b5;"><strong>${locationIcon}County:</strong> ${d.county}</p>
-    <p style="color:#d32f2f;"><strong>Occupation:</strong> <span class="highlight-occupation">${d.occupation}</span></p>
-    <p style="color:#6a1b9a;"><strong>${experienceIcon}Experience:</strong> ${d.experience} years</p>
+    card.innerHTML = `
+      ${iconHTML}
+      <div style="padding: 14px; text-align:left;">
+        ${verifiedBadge}
+        <h3 style="margin: 6px 0; color:#00796b;">${d.name} ${boostBadge}</h3>
+        <p style="color:#3f51b5;"><strong>${locationIcon}County:</strong> ${d.county}</p>
+        <p style="color:#d32f2f;"><strong>Occupation:</strong> <span class="highlight-occupation">${d.occupation}</span></p>
+        <p style="color:#6a1b9a;"><strong>${experienceIcon}Experience:</strong> ${d.experience} years</p>
 
-    <div style="margin-top:10px;">
-      ${contactHTML}
-    </div>
+        <!-- Service Activation Status -->
+        <p style="color: ${d.isActive ? '#4caf50' : '#f44336'}; font-weight: bold;">
+          ${d.isActive ? '✅ Service Active' : '❌ Service Inactive'}
+        </p>
 
-    <div style="display:flex; flex-wrap:wrap; gap:10px; margin-top:12px;">
-      ${boostButtonHTML}
-      ${deleteButtonHTML}
-      ${chatButtonHTML}
-    </div>
-  </div>
-`;
+        <div style="margin-top:10px;">
+          ${contactHTML}
+        </div>
 
+        <div style="display:flex; flex-wrap:wrap; gap:10px; margin-top:12px;">
+          ${actionButtonsHTML}
+        </div>
+
+        <!-- Interest Count -->
+        <p id="interest-count-${id}" style="color: #f44336; font-size: 1em; margin-top: 10px;">${interestCountText}</p>
+
+        <!-- Customer Reviews Section -->
+        <div style="margin-top:10px;">
+          <h4 style="color:#4CAF50;">📢 Customer Reviews</h4>
+          <div id="marketReviews-${id}" style="margin-top:10px;font-size:14px;"></div>
+          <div style="margin-top:10px;">
+            <button onclick="openAllReviewsModal('${id}')" style="background:#03a9f4;color:#fff;border:none;border-radius:5px;padding:6px 12px;">💬 View All Reviews</button>
+          </div>
+        </div>
+      </div>
+    `;
 
     container.appendChild(card);
 
@@ -6120,6 +6072,116 @@ else if (occupation.includes("shamba boy")) iconClass = "fa-leaf", bgColor = "#4
 }
 
 
+async function toggleServiceStatus(serviceId) {
+  const serviceDoc = await servicesRef.doc(serviceId).get();
+  const isActive = serviceDoc.data().isActive;
+
+  try {
+    // Toggle service activation status
+    await servicesRef.doc(serviceId).update({
+      isActive: !isActive // Toggle between true/false
+    });
+
+    // Show a custom toast or notification for all users
+    const message = isActive ? "Service Deactivated" : "Service Activated";
+    showToast(message, isActive ? "warning" : "info");
+
+    // Optionally, show a message on the card itself to indicate the status change
+    const serviceCard = document.getElementById(`service-${serviceId}`);
+    const statusElement = serviceCard.querySelector(".service-status");
+
+    if (statusElement) {
+      statusElement.textContent = isActive ? "Status: Inactive" : "Status: Active";
+      statusElement.style.color = isActive ? "gray" : "green"; // Gray for inactive, Green for active
+    }
+
+    loadServices(); // Reload to reflect changes
+  } catch (error) {
+    console.error("Error toggling service status:", error);
+    alert("Error updating service status.");
+  }
+}
+
+async function showInterest(serviceId) {
+  // Get the current user
+  const currentUserUid = currentUser?.uid;
+  if (!currentUserUid) {
+    alert("Please log in to show interest.");
+    return;
+  }
+
+  const serviceRef = servicesRef.doc(serviceId);
+  const serviceDoc = await serviceRef.get();
+
+  if (!serviceDoc.exists) {
+    console.error("Service not found");
+    return;
+  }
+
+  const serviceData = serviceDoc.data();
+  const interestedUsers = serviceData.interestedUsers || [];
+
+  // Check if the user has already shown interest
+  if (interestedUsers.includes(currentUserUid)) {
+    alert("You've already shown interest in this service.");
+    return;
+  }
+
+  // Add the user's UID to the interestedUsers array
+  interestedUsers.push(currentUserUid);
+
+  // Update the Firestore document with the new interestedUsers array
+  await serviceRef.update({
+    interestedUsers: interestedUsers
+  });
+
+  // Re-fetch the updated service data to update the interest count
+  const updatedServiceDoc = await serviceRef.get();
+  const updatedServiceData = updatedServiceDoc.data();
+  const updatedInterestCount = updatedServiceData.interestedUsers.length;
+
+  // Update the displayed interest count on the card
+  const interestCountElement = document.getElementById(`interest-count-${serviceId}`);
+  interestCountElement.textContent = `${updatedInterestCount} ${updatedInterestCount === 1 ? "person" : "people"} interested`;
+}
+
+
+// Show Review Modal
+function showReviewModal(serviceId) {
+  const reviewModal = document.getElementById("reviewModal");
+  reviewModal.style.display = 'block'; // Show the modal
+
+  // Handle review submission
+  document.getElementById("reviewForm").onsubmit = async (e) => {
+    e.preventDefault();
+    const rating = document.getElementById("reviewRating").value;
+    const comment = document.getElementById("reviewComment").value;
+
+    // Add review to service document
+    const review = {
+      rating: parseInt(rating),
+      comment,
+      user: currentUser.uid, // Store the user ID who posted the review
+      timestamp: firebase.firestore.FieldValue.serverTimestamp()
+    };
+
+    try {
+      await servicesRef.doc(serviceId).collection("reviews").add(review);
+      alert("Review added!");
+      reviewModal.style.display = 'none'; // Close the modal
+      loadServices(); // Reload to reflect changes
+    } catch (error) {
+      console.error("Error adding review:", error);
+      alert("Error adding review.");
+    }
+  };
+}
+
+// Close Review Modal
+function closeReviewModal() {
+  const reviewModal = document.getElementById("reviewModal");
+  reviewModal.style.display = 'none'; // Close the modal
+}
 
 
 async function boostServiceDirectly(serviceId) {
