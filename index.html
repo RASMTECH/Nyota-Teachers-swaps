@@ -1534,8 +1534,129 @@ header a {
     font-size: 12px;
   }
 }
+#alertsContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 20px;
+  max-height: 400px;
+  overflow-y: auto;
+  background: #e8f5e9; /* pale green */
+  border: 2px solid #4CAF50;
+  border-radius: 10px;
+}
+.alert-box {
+  background: #ffffff;
+  border: 2px solid #4CAF50;
+  padding: 12px 16px;
+  border-radius: 8px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  font-size: 15px;
+  color: #333;
+}
+#alertsContainer::-webkit-scrollbar {
+  width: 6px;
+}
+#alertsContainer::-webkit-scrollbar-thumb {
+  background-color: #4CAF50;
+  border-radius: 10px;
+}
 
+  .likes-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+    z-index: 9999;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .likes-modal-content {
+    background: #fff;
+    padding: 15px 20px;
+    border-radius: 6px;
+    width: 80%;
+    max-width: 300px; /* Reduced width */
+    max-height: 75%;
+    overflow-y: auto;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.25);
+    text-align: center;
+    font-size: 14px; /* Smaller text */
+  }
+
+  .likes-modal-close {
+    position: absolute;
+    right: 18px;
+    top: 12px;
+    font-size: 24px;
+    cursor: pointer;
+    color: #666;
+  }
+
+  #likesList {
+    list-style: none;
+    padding: 0;
+    margin: 12px 0 0;
+    text-align: left;
+    font-size: 13px; /* Smaller list text */
+  }
+
+  #likesList li {
+    padding: 6px;
+    border-bottom: 1px solid #eee;
+  }
+  .alert-card {
+    position: relative;
+    background: #f9f9f9;
+    border-left: 4px solid #007bff;
+    padding: 10px 15px;
+    margin: 10px 0;
+    border-radius: 6px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+  }
+
+  .dots-btn {
+    background: none;
+    border: none;
+    font-size: 18px;
+    cursor: pointer;
+  }
+
+  .dropdown {
+    position: relative;
+  }
+
+  .dropdown-content {
+    display: none;
+    position: absolute;
+    right: 0;
+    background-color: #fff;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    padding: 5px;
+    border-radius: 4px;
+    z-index: 1000;
+  }
+
+  .dropdown-content button {
+    background: none;
+    border: none;
+    padding: 5px 10px;
+    width: 100%;
+    text-align: left;
+    cursor: pointer;
+  }
+
+  .dropdown-content button:hover {
+    background-color: #f0f0f0;
+  }
 </style>
+
 
 </head>
 <body>
@@ -1656,6 +1777,14 @@ header a {
       <img src="https://i.imgur.com/SPqGvz9.jpeg" alt="Contact">
       <span>Contact Us</span></a>
     </li>
+
+<li>
+  <a class="menu-box" href="#" onclick="loadAlerts()">
+    <img src="https://i.imgur.com/QyvcpQ7.jpeg" alt="Alerts"> <!-- Replace with your preferred alert icon -->
+    <span>Alerts</span>
+  </a>
+</li>
+
   </ul>
 </nav>
 
@@ -1798,6 +1927,36 @@ header a {
     </div>
   </div>
   </div>
+
+
+<!-- Likes Modal -->
+<div id="likesModal" class="likes-modal-overlay" style="display: none;" onclick="handleBackdropClick(event)">
+  <div class="likes-modal-content">
+    <span class="likes-modal-close" onclick="closeLikesModal()">&times;</span>
+    <h2>❤️ Liked by</h2>
+    <ul id="likesList"></ul>
+    <button onclick="closeLikesModal()" style="margin-top: 15px; padding: 6px 12px; font-size: 13px; border: none; border-radius: 4px; background-color: #f44336; color: white; cursor: pointer;">
+      Close
+    </button>
+  </div>
+</div>
+<div id="logoutToast" style="
+  display: none;
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: #4CAF50;
+  color: white;
+  padding: 10px 20px;
+  border-radius: 5px;
+  font-size: 14px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+  z-index: 10000;
+">
+  ✅ You have been logged out successfully see you again .
+</div>
+
 <!-- ✅ How to Use the System Section -->
 <div id="usageHelp" class="page" style="display:none; padding: 20px;">
   <h2 style="color:#2196f3; text-align:center;">📘 How to Use the System</h2>
@@ -1814,6 +1973,24 @@ header a {
     <p style="color:#888;font-style:italic;">Need help? Contact admin or check the Notifications tab for updates.</p>
   </div>
 </div>
+
+<!-- Alerts Section -->
+<div id="alertsContainer" class="page" style="display: none; padding: 20px;">
+  <h2>📢 Market Alerts</h2>
+  <div id="alertsContainer" style="
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    padding: 15px;
+    max-height: 400px;
+    overflow-y: auto;
+    background-color: #e8f5e9;
+    border: 2px solid #4CAF50;
+    border-radius: 10px;
+  "></div>
+</div>
+
+  
 <!-- 🔲 Review Modal -->
 <div id="reviewModal" style="display:none; position:fixed;top:0;left:0;width:100%;height:100%;background:#00000080;z-index:999;justify-content:center;align-items:center;">
   <div style="background:white;padding:20px;border-radius:8px;max-width:400px;width:90%;position:relative;">
@@ -2946,14 +3123,6 @@ Register To Connect With  Available Soulmates
   </div>
 </div>
 
-<!-- ✅ Likes Modal -->
-<div id="likesModal" class="modal" style="display:none; position:fixed; top:0; left:0; width:15%; height:100%; background:rgba(0,0,0,0.6); z-index:999;">
-  <div style="background:#fff; max-width:400px; margin:60px auto; padding:20px; border-radius:8px; position:relative;">
-    <span onclick="closeLikesModal()" style="position:absolute; top:8px; right:12px; font-size:20px; cursor:pointer;">&times;</span>
-    <h3 style="margin:0 0 12px;">❤️ Likes</h3>
-    <div id="likesList" style="max-height:300px; overflow-y:auto;"></div>
-  </div>
-</div>
 
 <!-- ✅ Contact Section -->
 <div id="contact" class="page" style="display:none;">
@@ -3428,14 +3597,22 @@ function displayLoggedInUser() {
   }
 }
 
-
-// ✅ Logout function
 function logoutUser() {
   auth.signOut().then(() => {
     localStorage.removeItem("loggedInUser");
-    location.reload();
+
+    // Show toast message
+    const toast = document.getElementById("logoutToast");
+    toast.style.display = "block";
+
+    // Hide and reload after 2.5 seconds
+    setTimeout(() => {
+      toast.style.display = "none";
+      location.reload();
+    }, 2500);
   });
 }
+
 
 // ✅ Display user on page load (if logged in)
 window.onload = function () {
@@ -3443,7 +3620,41 @@ window.onload = function () {
 };
 
 
- async function saveSwap(swap) {
+// ✅ Swap Form Submit Handler
+document.getElementById("swapForm").addEventListener("submit", e => {
+  e.preventDefault();
+
+  if (!isLoggedIn || !currentUser) {
+    showPage("login");
+    return alert("You must be logged in.");
+  }
+
+  const data = {
+    teacherName: document.getElementById("teacherName").value.trim(),
+    phone: document.getElementById("phone").value.trim(),
+    subjectCombination: document.getElementById("subjectCombination").value.trim(),
+    county: document.getElementById("county").value,
+    subCounty: document.getElementById("subCounty").value,
+    swapCounty: document.getElementById("swapCounty").value,
+    swapSubCounty: document.getElementById("swapSubCounty")?.value || "", // Optional
+    category: document.getElementById("category").value,
+    hardship: document.getElementById("hardship").value
+  };
+
+  // Validate only required fields
+  const requiredFields = ['teacherName', 'phone', 'subjectCombination', 'county', 'subCounty', 'swapCounty', 'category', 'hardship'];
+  const missing = requiredFields.some(key => !data[key]);
+
+  if (missing) {
+    return alert("Please fill all required fields.");
+  }
+
+  saveSwap(data);
+});
+
+
+// ✅ Save Swap and Notify
+async function saveSwap(swap) {
   try {
     // Save the swap to the 'teacherSwaps' collection
     const swapDoc = await db.collection("teacherSwaps").add({
@@ -3455,28 +3666,33 @@ window.onload = function () {
     // Show confirmation alert for user
     showCustomAlert("Swap added successfully!", "success");
 
-    // Create an admin notification
+    // 🔔 Admin notification
     const notification = {
       type: "Swap Added",
       message: `A new swap has been posted by ${swap.teacherName} for ${swap.subjectCombination}.`,
       timestamp: firebase.firestore.FieldValue.serverTimestamp(),
       read: false,
-      itemId: swapDoc.id,  // Link the notification to the specific swap
+      itemId: swapDoc.id,
     };
 
-    // Add notification to the 'adminNotifications' collection
     await db.collection("adminNotifications").add(notification);
 
-    // Reset the form and reload the swaps
+    // 🔔 Global alert to all users
+    await db.collection("alerts").add({
+      title: "🔁 New Swap Posted",
+      message: `${swap.teacherName} just posted a swap for ${swap.subjectCombination}.`,
+      timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+      targetUserId: null  // public
+    });
+
+    // Reset form and reload swaps
     document.getElementById("swapForm").reset();
     loadSwaps();
+
   } catch (err) {
-    // Show error alert
     showCustomAlert("Error saving swap: " + err.message, "error");
   }
 }
-
-
 
 async function loadSwaps() {
   const container = document.querySelector("#swapCardContainer");
@@ -3680,30 +3896,53 @@ async function showFollowers(swapId) {
 // Function to follow a swap
 async function followSwap(swapId) {
   const currentUser = firebase.auth().currentUser;
-  const swapRef = db.collection("teacherSwaps").doc(swapId);
+  if (!currentUser) {
+    alert("Please log in to follow this swap.");
+    return;
+  }
 
-  // Ensure the user isn't following already
+  const swapRef = db.collection("teacherSwaps").doc(swapId);
   const swapDoc = await swapRef.get();
-  const followers = swapDoc.data().followers || [];
+  if (!swapDoc.exists) {
+    alert("Swap not found.");
+    return;
+  }
+
+  const swapData = swapDoc.data();
+  const followers = swapData.followers || [];
 
   // Check if the user is already following
   if (!followers.some(f => f.uid === currentUser.uid)) {
     const user = {
       uid: currentUser.uid,
-      email: currentUser.email, // Store the email for later use
+      email: currentUser.email, // Store email for reference
     };
 
-    // Add the user to the followers list
+    // Add user to followers list
     await swapRef.update({
       followers: firebase.firestore.FieldValue.arrayUnion(user)
     });
 
-    // Optionally update the follower count in the UI here
+    // Update follower count in UI
     const followerCount = followers.length + 1;
-    document.getElementById(`follower-count-${swapId}`).innerText = `${followerCount} people following`;
+    const countEl = document.getElementById(`follower-count-${swapId}`);
+    if (countEl) {
+      countEl.innerText = `${followerCount} people following`;
+    }
 
-    // Send admin notification about new follower
+    // Send admin notification
     await sendFollowAdminNotification(swapId, currentUser);
+
+    // ✅ Notify the swap poster (if not same user)
+    const posterId = swapData.postedBy;
+    if (posterId && posterId !== currentUser.uid) {
+      await db.collection("alerts").add({
+        title: "👀 New Follower",
+        message: `${currentUser.email || "Someone"} followed your swap: ${swapData.name || "Unnamed Swap"}`,
+        timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+        targetUserId: posterId
+      });
+    }
   }
 }
 
@@ -3733,6 +3972,7 @@ async function sendFollowAdminNotification(swapId, currentUser) {
 
   console.log("Admin notification sent for swap follow.");
 }
+
 
 
 // Function to close the swap
@@ -3894,8 +4134,8 @@ async function sendSwapInterest(swapId, teacherName) {
     return;
   }
 
-  const interestRef = db.collection("swapInterests").doc(); // Use composite key if needed
-
+  // Save the interest
+  const interestRef = db.collection("swapInterests").doc(); // You can use a composite key if needed
   await interestRef.set({
     swapId,
     teacherName,
@@ -3904,31 +4144,41 @@ async function sendSwapInterest(swapId, teacherName) {
     timestamp: firebase.firestore.FieldValue.serverTimestamp()
   });
 
-  // Create a new admin notification
+  // Send admin notification
   await sendAdminNotification(swapId, teacherName, currentUser.displayName || currentUser.email);
+
+  // 🔔 Notify swap poster
+  const swapDoc = await db.collection("teacherSwaps").doc(swapId).get();
+  if (swapDoc.exists) {
+    const swapData = swapDoc.data();
+    const posterId = swapData.userId;
+
+    // Only notify if not the same user
+    if (posterId && posterId !== currentUser.uid) {
+      await db.collection("alerts").add({
+        title: "📬 Swap Interest",
+        message: `${currentUser.displayName || "Someone"} is interested in your swap for ${swapData.subjectCombination}.`,
+        timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+        targetUserId: posterId
+      });
+    }
+  }
 
   showCustomAlert(`✅ Your interest in ${teacherName}'s swap has been sent!`, "success");
 }
 
+
 // Create a notification for admins when a user expresses interest
 async function sendAdminNotification(swapId, teacherName, userName) {
-  const notificationRef = db.collection("adminNotifications").doc(); // Create a new doc for each notification
-  
-  await notificationRef.set({
+  await db.collection("adminNotifications").add({
     type: "Swap Interest",
     message: `${userName} has shown interest in ${teacherName}'s swap.`,
-    itemId: swapId, // Store the swap ID for reference
+    itemId: swapId,
     timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-    read: false, // Set as unread initially
+    read: false
   });
-
-  // Optionally, trigger any other actions for admins here (e.g., FCM push notification)
 }
-
-
-
-
-// ✅ BOM Job Submit (Updated Format + Notifications)
+// ✅ BOM Job Submit (with Public & Admin Notifications)
 document.getElementById("bomJobForm").addEventListener("submit", async e => {
   e.preventDefault();
 
@@ -3957,26 +4207,41 @@ document.getElementById("bomJobForm").addEventListener("submit", async e => {
   };
 
   try {
+    // ✅ Save job to Firestore
     await bomRef.add(job);
+
     showCustomAlert("✅ Job posted successfully!", "success");
     document.getElementById("bomJobForm").reset();
     loadBOMJobs();
 
-    // 🔔 Notify matching service providers
+    // ✅ Optional: Notify relevant users (matching services logic)
     notifyMatchingServiceProviders(job);
 
-    // Notify Admin about the new job posting
+    // ✅ Admin Notification
     await db.collection("adminNotifications").add({
       type: "BOM Job Post",
       message: `New BOM job posted: ${job.jobType} by ${job.organization}, Salary: ${job.salaryRange}, Phone: ${job.phone}, County: ${job.county}`,
       timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-      read: false // ✅ Mark as unread for badge tracking
+      read: false
     });
+
+    // ✅ Public Alert (visible to all users)
+    const alertDoc = await db.collection("alerts").add({
+      title: "📢 New BOM Job",
+      message: `${job.organization} just posted a ${job.jobType} job in ${job.county}, ${job.subCounty}. 💰 Salary: ${job.salaryRange}`,
+      timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+      targetUserId: null,
+      category: "bom",  // helpful for filtering by type
+      county: job.county
+    });
+
+    console.log("✅ BOM alert created with ID:", alertDoc.id);
 
   } catch (err) {
     showCustomAlert("❌ Error posting job: " + err.message, "error");
   }
 });
+
 
 // ✅ Notify Matching Service Providers
 function notifyMatchingServiceProviders(job) {
@@ -4332,18 +4597,17 @@ else if (jobType.includes("maid")) iconClass = "fa-broom", bgColor = "#8bc34a"; 
 function followJob(jobId) {
   const followButton = document.querySelector(`button[onclick="followJob('${jobId}')"]`);
   const followedCountElement = document.getElementById(`followed-count-${jobId}`);
+  const user = firebase.auth().currentUser;
 
-  const userId = firebase.auth().currentUser?.uid;
-  if (!userId) {
+  if (!user) {
     alert("Please log in to follow this job.");
     return;
   }
 
-  // Reference to the Firestore document for the job
+  const userId = user.uid;
   const jobRef = firebase.firestore().doc(`bomJobs/${jobId}`);
 
-  // Fetch the current job data to check if the user is already following the job
-  jobRef.get().then(docSnapshot => {
+  jobRef.get().then(async docSnapshot => {
     if (!docSnapshot.exists) {
       console.error("Job not found!");
       return;
@@ -4353,42 +4617,56 @@ function followJob(jobId) {
     const alreadyFollowing = jobData.followedUsers && jobData.followedUsers.includes(userId);
 
     if (alreadyFollowing) {
-      // Unfollow the job if already following
-      followButton.innerText = "👀 Follow Job"; 
+      // 👎 Unfollow
+      followButton.innerText = "👀 Follow Job";
       followButton.classList.remove('followed');
-      
-      // Remove the user from followedUsers array in Firestore
-      jobRef.update({
-        followedUsers: firebase.firestore.FieldValue.arrayRemove(userId), // Removes the userId from the followedUsers array
-        followedCount: firebase.firestore.FieldValue.increment(-1), // Decreases the followedCount by 1
-      })
-      .then(() => {
-        console.log("Unfollowed the job successfully.");
-      })
-      .catch((error) => {
-        console.error("Error removing follow status: ", error);
+
+      await jobRef.update({
+        followedUsers: firebase.firestore.FieldValue.arrayRemove(userId),
+        followedCount: firebase.firestore.FieldValue.increment(-1)
       });
+
+      if (followedCountElement) {
+        let currentCount = parseInt(followedCountElement.textContent) || 1;
+        followedCountElement.textContent = `${currentCount - 1} following`;
+      }
+
+      console.log("Unfollowed the job successfully.");
     } else {
-      // Follow the job if not already following
-      followButton.innerText = "👀 Following Job"; 
+      // 👍 Follow
+      followButton.innerText = "👀 Following Job";
       followButton.classList.add('followed');
-      
-      // Add the user to followedUsers array in Firestore
-      jobRef.update({
-        followedUsers: firebase.firestore.FieldValue.arrayUnion(userId), // Adds the userId to the followedUsers array
-        followedCount: firebase.firestore.FieldValue.increment(1), // Increases the followedCount by 1
-      })
-      .then(() => {
-        console.log("Followed the job successfully.");
-      })
-      .catch((error) => {
-        console.error("Error adding follow status: ", error);
+
+      await jobRef.update({
+        followedUsers: firebase.firestore.FieldValue.arrayUnion(userId),
+        followedCount: firebase.firestore.FieldValue.increment(1)
       });
+
+      if (followedCountElement) {
+        let currentCount = parseInt(followedCountElement.textContent) || 0;
+        followedCountElement.textContent = `${currentCount + 1} following`;
+      }
+
+      console.log("Followed the job successfully.");
+
+      // ✅ Notify the poster if not self
+      const posterName = jobData.postedBy || "Poster";
+      const posterId = jobData.userId || null;
+
+      if (posterId && posterId !== userId) {
+        await db.collection("alerts").add({
+          title: "👥 Job Followed",
+          message: `${user.displayName || user.email || "Someone"} followed your BOM job for ${jobData.jobType} at ${jobData.organization}.`,
+          timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+          targetUserId: posterId
+        });
+      }
     }
   }).catch((error) => {
-    console.error("Error fetching job data: ", error);
+    console.error("Error handling job follow: ", error);
   });
 }
+
 
 // Function to update the followed count on page load (in case of page refresh)
 function updateFollowedCount(jobId) {
@@ -4412,19 +4690,18 @@ function updateFollowedCount(jobId) {
 
 // Function to handle showing interest and updating followed count
 function showInterest(jobId) {
-  const userId = firebase.auth().currentUser?.uid; // Get the current user's ID using Firebase Authentication
+  const user = firebase.auth().currentUser;
+  const userId = user?.uid;
+
   if (!userId) {
     alert("Please log in to show interest.");
     return;
   }
 
   const followedCountElement = document.getElementById(`followed-count-${jobId}`);
-
-  // Reference to the Firestore document for the job
   const jobRef = firebase.firestore().doc(`bomJobs/${jobId}`);
 
-  // Fetch the current job data to check if the user has already shown interest
-  jobRef.get().then(docSnapshot => {
+  jobRef.get().then(async docSnapshot => {
     if (!docSnapshot.exists) {
       console.error("Job not found!");
       return;
@@ -4434,7 +4711,7 @@ function showInterest(jobId) {
     const alreadyFollowed = jobData.followedUsers && jobData.followedUsers.includes(userId);
 
     if (alreadyFollowed) {
-      // ✅ Custom styled alert instead of default alert
+      // ✅ Show custom alert
       const alertBox = document.createElement("div");
       alertBox.innerText = "⚠️ You’ve already shown interest in this job!";
       alertBox.style.position = "fixed";
@@ -4455,52 +4732,56 @@ function showInterest(jobId) {
         document.body.removeChild(alertBox);
       }, 3000);
 
-      return;  // Prevent further interaction if already interested
+      return;
     }
 
-    // If user has not shown interest, update the followed count
-    let followedCount = jobData.followedCount || 0;
-    followedCount++;
-
-    // Add the user's ID to the list of followed users (to track who is interested)
+    // Add interest
+    const followedCount = (jobData.followedCount || 0) + 1;
     const updatedFollowedUsers = jobData.followedUsers || [];
     updatedFollowedUsers.push(userId);
 
-    // Update the Firestore document
-    jobRef.update({
+    await jobRef.update({
       followedCount: followedCount,
-      followedUsers: updatedFollowedUsers,
-    })
-    .then(() => {
-      // Update the UI with the new followed count
-      followedCountElement.innerText = `${followedCount} people following`;
-      console.log("Followed count updated successfully.");
-
-      // Send an admin notification about the user's interest
-      const notifRef = firebase.firestore().collection("adminNotifications").doc();
-      notifRef.set({
-        type: "Job Interest",
-        jobId: jobId,
-        userId: userId,
-        message: `📌 User with ID ${userId} has shown interest in job ${jobId}.`,
-        timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-      });
-
-      console.log("Admin notification sent for job interest.");
-
-    })
-    .catch((error) => {
-      console.error("Error updating followed count: ", error);
+      followedUsers: updatedFollowedUsers
     });
+
+    // Update UI
+    if (followedCountElement) {
+      followedCountElement.innerText = `${followedCount} people following`;
+    }
+
+    console.log("Followed count updated successfully.");
+
+    // ✅ Notify Admin
+    await firebase.firestore().collection("adminNotifications").add({
+      type: "Job Interest",
+      jobId: jobId,
+      userId: userId,
+      message: `📌 User with ID ${userId} has shown interest in job ${jobId}.`,
+      timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+    });
+
+    // ✅ Notify Poster
+    const posterId = jobData.userId;
+    const jobTitle = jobData.jobType || "a job";
+    const organization = jobData.organization || "an organization";
+
+    if (posterId && posterId !== userId) {
+      await firebase.firestore().collection("alerts").add({
+        title: "📌 New Job Interest",
+        message: `${user.displayName || user.email || "Someone"} is interested in your job: ${jobTitle} at ${organization}.`,
+        timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+        targetUserId: posterId
+      });
+    }
+
+    console.log("Admin and poster notified.");
+
   }).catch((error) => {
     console.error("Error fetching job data: ", error);
   });
 }
 
-// Call this function when the page is loaded or refreshed to sync the followed count
-function onPageLoad(jobId) {
-  updateFollowedCount(jobId);
-}
 
 // Function to update the interest count on page load (in case of page refresh)
 function updateInterestCount(jobId) {
@@ -4894,6 +5175,7 @@ document.getElementById("soulmateForm").addEventListener("submit", async (e) => 
     document.getElementById("soulmateForm").reset();
     loadSoulmates();
 
+    // ✅ Notify Admin
     await db.collection("adminNotifications").add({
       type: "Soulmate Profile",
       message: `New soulmate profile posted: ${data.name}, Age: ${data.age}, Phone: ${data.phone}`,
@@ -4901,11 +5183,20 @@ document.getElementById("soulmateForm").addEventListener("submit", async (e) => 
       read: false
     });
 
+    // ✅ Notify All Users via Global Alert
+    await db.collection("alerts").add({
+      title: "💘 New Soulmate Profile",
+      message: `${data.name} (${data.sex}, ${data.age} yrs) just posted a profile.`,
+      timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+      targetUserId: null // public to all users
+    });
+
   } catch (err) {
     console.error("Error saving profile:", err);
     showCustomAlert("❌ Error saving profile: " + err.message, "error");
   }
 });
+
 // Real-time listener for like changes on the profile
 function listenForLikeChanges(profileId) {
   soulmateRef.doc(profileId).collection("likes").onSnapshot(snapshot => {
@@ -4929,6 +5220,10 @@ async function toggleLike(profileId) {
   const likeRef = soulmateRef.doc(profileId).collection("likes").doc(user.uid);
   const likeDoc = await likeRef.get();
 
+  const profileDoc = await soulmateRef.doc(profileId).get();
+  const profileData = profileDoc.data();
+  const theirUid = profileData?.postedBy;
+
   if (likeDoc.exists) {
     // 👎 Unlike
     await likeRef.delete();
@@ -4940,16 +5235,27 @@ async function toggleLike(profileId) {
     });
 
     // ✅ Match check
-    const profileDoc = await soulmateRef.doc(profileId).get();
-    const theirUid = profileDoc.data()?.postedBy;
     if (theirUid && theirUid !== user.uid) {
       const reverseLikeDoc = await soulmateRef.doc(profileId).collection("likes").doc(theirUid).get();
-      if (reverseLikeDoc.exists) showMatchCelebration(); // 🎉 trigger match effect
+      if (reverseLikeDoc.exists) {
+        showMatchCelebration(); // 🎉 trigger match effect
+      }
+    }
+
+    // ✅ Send Alert to Profile Owner
+    if (theirUid && theirUid !== user.uid) {
+      await db.collection("alerts").add({
+        title: "💖 New Like",
+        message: `${user.displayName || "Someone"} liked your soulmate profile.`,
+        timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+        targetUserId: theirUid
+      });
     }
   }
 
   updateLikeUI(profileId); // Update the UI after liking/unliking
 }
+
 
 // Function to update like count and button status
 async function updateLikeUI(profileId) {
@@ -4968,7 +5274,6 @@ async function updateLikeUI(profileId) {
   }
 }
 
-// Function to show the list of users who liked the profile
 async function showLikes(profileId) {
   const likesRef = soulmateRef.doc(profileId).collection("likes");
   const snapshot = await likesRef.get();
@@ -4978,21 +5283,37 @@ async function showLikes(profileId) {
     return;
   }
 
-  let names = [];
+  const likesList = document.getElementById("likesList");
+  likesList.innerHTML = ""; // Clear previous entries
+
   for (const doc of snapshot.docs) {
     const userName = doc.data().user || `User ID: ${doc.id}`;
-    names.push(userName);
+    const listItem = document.createElement("li");
+    listItem.textContent = userName;
+    likesList.appendChild(listItem);
   }
 
-  alert(`❤️ Liked by:\n\n${names.join("\n")}`);
+  // Show modal
+  document.getElementById("likesModal").style.display = "flex";
 
-  // Send admin notification about the likes being viewed
+  // Notify admin
   sendAdminNotification(
     "Soulmate Profile Likes Viewed",
-    currentUser.uid, 
+    currentUser.uid,
     `The likes for soulmate profile ID ${profileId} were viewed.`
   );
 }
+function closeLikesModal() {
+  document.getElementById("likesModal").style.display = "none";
+}
+
+function handleBackdropClick(event) {
+  const modalContent = document.querySelector(".likes-modal-content");
+  if (!modalContent.contains(event.target)) {
+    closeLikesModal();
+  }
+}
+
 
 // Helper function to send admin notification
 async function sendAdminNotification(type, userId, message) {
@@ -5821,17 +6142,17 @@ async function submitServiceHandler(e) {
     return alert("You must be logged in.");
   }
 
-  // Check how many services this user has already posted
+  // ✅ Check how many services this user has already posted
   const serviceCountSnap = await servicesRef.where("postedBy", "==", currentUser.uid).get();
   const totalServices = serviceCountSnap.size;
 
-  // If already posted 1 service, require payment — unless admin
+  // ✅ If already posted 1 service, require payment — unless admin
   if (totalServices >= 1 && !isAdmin) {
     showPaymentModalFor("service", 200, currentUser.uid, "Post Extra Service");
     return;
   }
 
-  // Collect form input values
+  // ✅ Collect form input values
   const data = {
     name: document.getElementById("svcName").value.trim(),
     county: document.getElementById("svcCounty").value,
@@ -5843,16 +6164,19 @@ async function submitServiceHandler(e) {
     timestamp: firebase.firestore.FieldValue.serverTimestamp()
   };
 
+  // ✅ Validate all fields
   if (Object.values(data).some(v => !v)) {
     return alert("Please fill all fields.");
   }
 
   try {
+    // ✅ Save to Firestore
     await servicesRef.add(data);
     showCustomAlert("✅ Service posted!", "success");
     document.getElementById("serviceForm").reset();
     loadServices();
 
+    // ✅ Admin Notification
     await db.collection("adminNotifications").add({
       type: "Marketplace Post",
       message: `New service posted: ${data.name} (${data.occupation}), County: ${data.county}, Phone: ${data.phone}`,
@@ -5860,10 +6184,21 @@ async function submitServiceHandler(e) {
       read: false
     });
 
+    // ✅ Public Alert for All Users
+    await db.collection("alerts").add({
+      title: "🛠️ New Service",
+      message: `${data.name} offers ${data.occupation} services in ${data.county}, ${data.subcounty}.`,
+      timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+      targetUserId: null,
+      category: "service",
+      county: data.county
+    });
+
   } catch (err) {
     showCustomAlert("❌ Error: " + err.message, "error");
   }
 }
+
 async function loadServices() {
   const container = document.getElementById("servicesContainer");
   const trendingContainer = document.getElementById("trendingContainer");
@@ -5945,86 +6280,6 @@ async function loadServices() {
     else if (occupation.includes("driver")) iconClass = "fa-car", bgColor = "#26a69a";
     else if (occupation.includes("nurse")) iconClass = "fa-user-nurse", bgColor = "#ec407a";
     else if (occupation.includes("chef")) iconClass = "fa-utensils", bgColor = "#ffa726";
-else if (occupation.includes("driver")) iconClass = "fa-car", bgColor = "#26a69a";
-else if (occupation.includes("nurse")) iconClass = "fa-user-nurse", bgColor = "#ec407a";
-else if (occupation.includes("chef")) iconClass = "fa-utensils", bgColor = "#ffa726";
-else if (occupation.includes("developer")) iconClass = "fa-laptop-code", bgColor = "#42a5f5";  // Software Developer
-else if (occupation.includes("designer")) iconClass = "fa-paint-brush", bgColor = "#9c27b0";  // Designer (e.g., UI/UX)
-else if (occupation.includes("engineer")) iconClass = "fa-cogs", bgColor = "#0288d1";  // Engineer
-else if (occupation.includes("manager")) iconClass = "fa-users-cog", bgColor = "#8e24aa";  // Manager
-else if (occupation.includes("doctor")) iconClass = "fa-stethoscope", bgColor = "#f44336";  // Doctor
-else if (occupation.includes("scientist")) iconClass = "fa-flask", bgColor = "#9e9e9e";  // Scientist
-else if (occupation.includes("architect")) iconClass = "fa-building", bgColor = "#5f6368";  // Architect
-else if (occupation.includes("photographer")) iconClass = "fa-camera", bgColor = "#607d8b";  // Photographer
-else if (occupation.includes("plumber")) iconClass = "fa-wrench", bgColor = "#3f51b5";  // Plumber
-else if (occupation.includes("electrician")) iconClass = "fa-bolt", bgColor = "#ffc107";  // Electrician
-else if (occupation.includes("social worker")) iconClass = "fa-users", bgColor = "#673ab7";  // Social Worker
-else if (occupation.includes("cleaner")) iconClass = "fa-broom", bgColor = "#00bcd4";  // Cleaner
-else if (occupation.includes("counselor")) iconClass = "fa-headset", bgColor = "#f06292";  // Counselor
-else if (occupation.includes("bartender")) iconClass = "fa-glass-cheers", bgColor = "#795548";  // Bartender
-else if (occupation.includes("waiter")) iconClass = "fa-utensils", bgColor = "#ff5722";  // Waiter
-else if (occupation.includes("dancer")) iconClass = "fa-dance", bgColor = "#f06292";  // Dancer
-else if (occupation.includes("editor")) iconClass = "fa-pen", bgColor = "#4caf50";  // Editor
-else if (occupation.includes("receptionist")) iconClass = "fa-address-book", bgColor = "#2196f3";  // Receptionist
-else if (occupation.includes("real estate agent")) iconClass = "fa-building", bgColor = "#8bc34a";  // Real Estate Agent
-else if (occupation.includes("sales manager")) iconClass = "fa-users", bgColor = "#9c27b0";  // Sales Manager
-else if (occupation.includes("mechanic")) iconClass = "fa-cogs", bgColor = "#ff9800";  // Mechanic
-else if (occupation.includes("construction worker")) iconClass = "fa-hard-hat", bgColor = "#795548";  // Construction Worker
-else if (occupation.includes("bus driver")) iconClass = "fa-bus", bgColor = "#0288d1";  // Bus Driver
-else if (occupation.includes("web designer")) iconClass = "fa-laptop-code", bgColor = "#42a5f5";  // Web Designer
-else if (occupation.includes("hr manager")) iconClass = "fa-users-cog", bgColor = "#8bc34a";  // HR Manager
-else if (occupation.includes("programmer")) iconClass = "fa-code", bgColor = "#4caf50";  // Programmer
-else if (occupation.includes("event planner")) iconClass = "fa-calendar-alt", bgColor = "#ff9800";  // Event Planner
-else if (occupation.includes("translator")) iconClass = "fa-language", bgColor = "#9c27b0";  // Translator
-else if (occupation.includes("marketer")) iconClass = "fa-bullhorn", bgColor = "#ff5722";  // Marketer
-else if (occupation.includes("business analyst")) iconClass = "fa-chart-line", bgColor = "#673ab7";  // Business Analyst
-else if (occupation.includes("pharmacist")) iconClass = "fa-capsules", bgColor = "#f44336";  // Pharmacist
-else if (occupation.includes("social media manager")) iconClass = "fa-share-alt", bgColor = "#00bcd4";  // Social Media Manager
-else if (occupation.includes("customer support")) iconClass = "fa-headphones", bgColor = "#9e9e9e";  // Customer Support
-else if (occupation.includes("journalist")) iconClass = "fa-newspaper", bgColor = "#607d8b";  // Journalist
-else if (occupation.includes("chemist")) iconClass = "fa-flask", bgColor = "#9e9e9e";  // Chemist
-else if (occupation.includes("fitness trainer")) iconClass = "fa-dumbbell", bgColor = "#ff5722";  // Fitness Trainer
-else if (occupation.includes("veterinarian")) iconClass = "fa-paw", bgColor = "#ff9800";  // Veterinarian
-else if (occupation.includes("barber")) iconClass = "fa-scissors", bgColor = "#2196f3";  // Barber
-else if (occupation.includes("hair stylist")) iconClass = "fa-cut", bgColor = "#e91e63";  // Hair Stylist
-else if (occupation.includes("teacher assistant")) iconClass = "fa-chalkboard", bgColor = "#42a5f5";  // Teacher Assistant
-else if (occupation.includes("biologist")) iconClass = "fa-leaf", bgColor = "#4caf50";  // Biologist
-else if (occupation.includes("editor-in-chief")) iconClass = "fa-pencil-alt", bgColor = "#673ab7";  // Editor-in-Chief
-else if (occupation.includes("author")) iconClass = "fa-book", bgColor = "#9e9e9e";  // Author
-else if (occupation.includes("librarian")) iconClass = "fa-book-reader", bgColor = "#3f51b5";  // Librarian
-else if (occupation.includes("geologist")) iconClass = "fa-globe", bgColor = "#0288d1";  // Geologist
-else if (occupation.includes("actuary")) iconClass = "fa-calculator", bgColor = "#f44336";  // Actuary
-else if (occupation.includes("public relations")) iconClass = "fa-users", bgColor = "#e91e63";  // Public Relations
-else if (occupation.includes("yoga instructor")) iconClass = "fa-spa", bgColor = "#8bc34a";  // Yoga Instructor
-else if (occupation.includes("paramedic")) iconClass = "fa-ambulance", bgColor = "#f44336";  // Paramedic
-else if (occupation.includes("tour guide")) iconClass = "fa-map-marked-alt", bgColor = "#9c27b0";  // Tour Guide
-else if (occupation.includes("lumberjack")) iconClass = "fa-tree", bgColor = "#4caf50";  // Lumberjack
-else if (occupation.includes("firefighter")) iconClass = "fa-fire", bgColor = "#f44336";  // Firefighter
-else if (occupation.includes("flight attendant")) iconClass = "fa-plane", bgColor = "#2196f3";  // Flight Attendant
-else if (occupation.includes("civil engineer")) iconClass = "fa-hard-hat", bgColor = "#8bc34a";  // Civil Engineer
-else if (occupation.includes("real estate broker")) iconClass = "fa-home", bgColor = "#607d8b";  // Real Estate Broker
-else if (occupation.includes("tax consultant")) iconClass = "fa-calculator", bgColor = "#ff5722";  // Tax Consultant
-else if (occupation.includes("business consultant")) iconClass = "fa-briefcase", bgColor = "#673ab7";  // Business Consultant
-else if (occupation.includes("data scientist")) iconClass = "fa-database", bgColor = "#0288d1";  // Data Scientist
-else if (occupation.includes("security analyst")) iconClass = "fa-shield-alt", bgColor = "#4caf50";  // Security Analyst
-else if (occupation.includes("event coordinator")) iconClass = "fa-calendar-alt", bgColor = "#ff9800";  // Event Coordinator
-else if (occupation.includes("copywriter")) iconClass = "fa-pencil-alt", bgColor = "#607d8b";  // Copywriter
-else if (occupation.includes("marketing manager")) iconClass = "fa-bullhorn", bgColor = "#ff5722";  // Marketing Manager
-else if (occupation.includes("network administrator")) iconClass = "fa-server", bgColor = "#42a5f5";  // Network Administrator
-else if (occupation.includes("AI specialist")) iconClass = "fa-robot", bgColor = "#9e9e9e";  // AI Specialist
-else if (occupation.includes("system analyst")) iconClass = "fa-laptop", bgColor = "#4caf50";  // System Analyst
-else if (occupation.includes("radiologist")) iconClass = "fa-x-ray", bgColor = "#f44336";  // Radiologist
-else if (occupation.includes("personal assistant")) iconClass = "fa-user-tie", bgColor = "#3f51b5";  // Personal Assistant
-else if (occupation.includes("IT consultant")) iconClass = "fa-laptop", bgColor = "#0288d1";  // IT Consultant
-else if (occupation.includes("sound engineer")) iconClass = "fa-headphones", bgColor = "#ff5722";  // Sound Engineer
-else if (occupation.includes("public speaker")) iconClass = "fa-volume-up", bgColor = "#8e24aa";  // Public Speaker
-else if (occupation.includes("app developer")) iconClass = "fa-code", bgColor = "#4caf50";  // App Developer
-else if (occupation.includes("teacher")) iconClass = "fa-chalkboard-teacher", bgColor = "#42a5f5";
-else if (occupation.includes("driver")) iconClass = "fa-car", bgColor = "#26a69a";  // Driver
-else if (occupation.includes("uber driver")) iconClass = "fa-car", bgColor = "#26a69a";  // Uber Driver
-else if (occupation.includes("clerk")) iconClass = "fa-file-alt", bgColor = "#8bc34a";  // Clerk
-else if (occupation.includes("shamba boy")) iconClass = "fa-leaf", bgColor = "#4caf50";  // Shamba Boy
-
     else if (occupation.includes("plumber")) iconClass = "fa-tools", bgColor = "#7e57c2";
 
     const iconHTML = `
@@ -6181,49 +6436,88 @@ async function toggleServiceStatus(serviceId) {
     alert("Error updating service status.");
   }
 }
-
 async function showInterest(serviceId) {
-  // Get the current user
   const currentUserUid = currentUser?.uid;
   if (!currentUserUid) {
-    alert("Please log in to show interest.");
+    showCustomAlert("⚠️ Please log in to show interest.");
     return;
   }
 
-  const serviceRef = servicesRef.doc(serviceId);
-  const serviceDoc = await serviceRef.get();
+  try {
+    const serviceRef = servicesRef.doc(serviceId);
+    const serviceDoc = await serviceRef.get();
 
-  if (!serviceDoc.exists) {
-    console.error("Service not found");
-    return;
+    if (!serviceDoc.exists) {
+      console.error("Service not found.");
+      return;
+    }
+
+    const serviceData = serviceDoc.data();
+    const interestedUsers = serviceData.interestedUsers || [];
+
+    if (interestedUsers.includes(currentUserUid)) {
+      showCustomAlert("✅ You've already shown interest in this service.");
+      return;
+    }
+
+    interestedUsers.push(currentUserUid);
+    await serviceRef.update({ interestedUsers });
+
+    const posterId = serviceData.postedBy;
+    if (posterId && posterId !== currentUserUid) {
+      await db.collection("alerts").add({
+        title: "📌 New Interest in Your Service",
+        message: `${currentUser.displayName || "Someone"} is interested in your service: ${serviceData.name || "Unnamed Service"}`,
+        timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+        targetUserId: posterId,
+        section: "services",
+        relatedId: serviceId
+      });
+    }
+
+    const updatedInterestCount = interestedUsers.length;
+    const interestCountElement = document.getElementById(`interest-count-${serviceId}`);
+    if (interestCountElement) {
+      interestCountElement.textContent = `${updatedInterestCount} ${updatedInterestCount === 1 ? "person" : "people"} interested`;
+    }
+
+    showCustomAlert("🎉 Your interest has been registered successfully!");
+
+  } catch (error) {
+    console.error("❌ Error showing interest:", error.message || error);
+    showCustomAlert("Something went wrong. Please try again.");
   }
-
-  const serviceData = serviceDoc.data();
-  const interestedUsers = serviceData.interestedUsers || [];
-
-  // Check if the user has already shown interest
-  if (interestedUsers.includes(currentUserUid)) {
-    alert("You've already shown interest in this service.");
-    return;
-  }
-
-  // Add the user's UID to the interestedUsers array
-  interestedUsers.push(currentUserUid);
-
-  // Update the Firestore document with the new interestedUsers array
-  await serviceRef.update({
-    interestedUsers: interestedUsers
-  });
-
-  // Re-fetch the updated service data to update the interest count
-  const updatedServiceDoc = await serviceRef.get();
-  const updatedServiceData = updatedServiceDoc.data();
-  const updatedInterestCount = updatedServiceData.interestedUsers.length;
-
-  // Update the displayed interest count on the card
-  const interestCountElement = document.getElementById(`interest-count-${serviceId}`);
-  interestCountElement.textContent = `${updatedInterestCount} ${updatedInterestCount === 1 ? "person" : "people"} interested`;
 }
+
+// ✅ Reusable inlined custom alert function
+function showCustomAlert(message) {
+  const alertBox = document.createElement("div");
+  alertBox.textContent = message;
+  alertBox.style = `
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: palegreen;
+    color: black;
+    padding: 15px 25px;
+    font-size: 16px;
+    font-weight: bold;
+    border: 2px solid green;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.3);
+    z-index: 9999;
+    text-align: center;
+  `;
+
+  document.body.appendChild(alertBox);
+  setTimeout(() => {
+    alertBox.remove();
+  }, 3000);
+}
+
+
+
 
 
 // Show Review Modal
@@ -6342,6 +6636,14 @@ async function postService() {
 
     console.log("Admin notification created for new service");
 
+    // ✅ Notify all users via global alert
+    await db.collection("alerts").add({
+      title: "🛠️ New Service Available",
+      message: `${currentUser.displayName || "Someone"} just posted a service: ${occupation} in ${county}.`,
+      timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+      targetUserId: null // visible to everyone
+    });
+
     // Clear form fields
     document.getElementById("serviceForm").reset();
 
@@ -6353,6 +6655,7 @@ async function postService() {
     showCustomAlert("Failed to post service. Please try again.", "error");
   }
 }
+
 
 
 async function unlockServiceContacts() {
@@ -6554,7 +6857,7 @@ async function submitMarketHandler(e) {
   const itemPhone = document.getElementById("itemPhone").value.trim();
   const itemPhotoFile = document.getElementById("itemPhoto").files[0];
 
-  // ✅ Add this if you add a dropdown for condition
+  // ✅ Optional dropdown for item condition
   const itemConditionInput = document.getElementById("itemCondition");
   const itemCondition = itemConditionInput ? itemConditionInput.value : "New";
 
@@ -6563,41 +6866,53 @@ async function submitMarketHandler(e) {
   const itemData = {
     name: itemName,
     category: itemCategory,
-    description: itemDescription, // this will appear as "Status"
+    description: itemDescription,
     price: itemPrice,
     county: itemCounty,
     subcounty: itemSubcounty,
     phone: itemPhone,
     postedBy: currentUser.uid,
-    posterName: posterName,  // Storing the poster's name (updated)
+    posterName: posterName,
     condition: itemCondition,
     timestamp: firebase.firestore.FieldValue.serverTimestamp()
   };
 
   try {
+    // ✅ Upload item photo if available
     if (itemPhotoFile) {
       const photoPath = `marketPhotos/${Date.now()}_${itemPhotoFile.name}`;
       const photoSnap = await storage.ref(photoPath).put(itemPhotoFile);
       itemData.photoURL = await photoSnap.ref.getDownloadURL();
     }
 
+    // ✅ Save item to Firestore
     await marketRef.add(itemData);
     showCustomAlert("✅ Item posted!", "success");
     document.getElementById("marketForm").reset();
     loadMarketItems();
 
-    // ✅ Notify Admin
+    // ✅ Notify Admin with poster phone
     await db.collection("adminNotifications").add({
       type: "Marketplace Post",
-      message: `New item posted: ${itemName} (${itemCategory}), Price: ${itemPrice}, Phone: ${itemPhone}, County: ${itemCounty}`,
+      message: `New item posted: ${itemName} (${itemCategory})\nPrice: ${itemPrice}\n📞 Phone: ${itemPhone}\n📍 County: ${itemCounty}`,
       timestamp: firebase.firestore.FieldValue.serverTimestamp(),
       read: false
+    });
+
+    // ✅ Alert All Users with phone number
+    await db.collection("alerts").add({
+      title: "🆕 New Market Item",
+      message: `${posterName} just posted: ${itemName} (${itemCategory}) @ ${itemPrice}\n📞 Contact: ${itemPhone}`,
+      timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+      targetUserId: null  // visible to all
     });
 
   } catch (err) {
     showCustomAlert("❌ Error: " + err.message, "error");
   }
 }
+
+
 // ✅ Attach Market Form Handler (safe and reusable)
 function attachMarketFormSubmit() {
   const oldForm = document.getElementById("marketForm");
@@ -6726,6 +7041,48 @@ async function loadMarketItems() {
     console.error("❌ Error loading market items:", err);
   }
 }
+
+async function loadAlerts() {
+  const container = document.getElementById("alertsContainer");
+  container.style.display = "block";
+  container.innerHTML = "<h3>🔔 Alerts</h3>";
+
+  const snapshot = await db.collection("alerts").orderBy("timestamp", "desc").limit(50).get();
+  if (snapshot.empty) {
+    container.innerHTML += "<p>No alerts yet.</p>";
+    return;
+  }
+
+  const currentUserId = auth.currentUser?.uid; // Get current user
+
+  snapshot.forEach(doc => {
+    const data = doc.data();
+    const alertId = doc.id;
+    const timestamp = new Date(data.timestamp.toDate()).toLocaleString();
+
+    const deleteMenu = (data.userId === currentUserId)
+      ? `
+        <div class="dropdown">
+          <button class="dots-btn" onclick="toggleMenu('${alertId}')">⋮</button>
+          <div class="dropdown-content" id="menu-${alertId}">
+            <button onclick="deleteAlert('${alertId}')">🗑️ Delete</button>
+          </div>
+        </div>`
+      : '';
+
+    container.innerHTML += `
+      <div class="alert-card">
+        <div class="alert-content">
+          <strong>${data.title}</strong><br>
+          ${data.message}<br>
+          <small>${timestamp}</small>
+        </div>
+        ${deleteMenu}
+      </div>`;
+  });
+}
+
+
 async function loadInterestCount(itemId) {
   try {
     const snapshot = await db.collection("marketItems").doc(itemId).collection("interests").get();
@@ -6962,29 +7319,47 @@ async function reportMarketItem(itemId) {
     if (!user) return showCustomAlert("⚠️ You must be logged in to report an item.", "warning");
 
     try {
-      const reportRef = db.collection("marketReports").doc();
-      const notifRef = db.collection("adminNotifications").doc();
       const itemSnap = await marketRef.doc(itemId).get();
       const item = itemSnap.data();
+      const itemOwnerId = item?.userId;
+
+      if (!item) throw new Error("Item not found");
 
       // Save the report to Firestore
-      await reportRef.set({
+      await db.collection("marketReports").add({
         itemId,
         reportedBy: user.uid,
         reporterName: user.displayName || user.email,
-        itemName: item?.name || "Item",
+        itemName: item.name || "Unnamed Item",
         timestamp: firebase.firestore.FieldValue.serverTimestamp()
       });
 
-      // Create the admin notification
-      await notifRef.set({
+      // Notify Admins
+      await db.collection("adminNotifications").add({
         type: "Market Report",
         itemId,
-        itemName: item?.name || "Item",
+        itemName: item.name || "Unnamed Item",
         reportedBy: user.displayName || user.email,
         timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-        message: `🚩 Market item "${item?.name}" was reported by ${user.displayName || user.email}.`
+        message: `🚩 Market item "${item.name}" was reported by ${user.displayName || user.email}.`
       });
+
+      // Notify Item Owner
+      if (itemOwnerId && itemOwnerId !== user.uid) {
+        await db
+          .collection("userNotifications")
+          .doc(itemOwnerId)
+          .collection("notifications")
+          .add({
+            type: "Item Reported",
+            itemId,
+            itemName: item.name,
+            from: user.displayName || user.email,
+            message: `⚠️ Your market item "${item.name}" has been reported by a user.`,
+            timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+            read: false
+          });
+      }
 
       showCustomAlert("✅ Report submitted. Admin will review it shortly.", "success");
     } catch (error) {
@@ -6993,77 +7368,104 @@ async function reportMarketItem(itemId) {
     }
   });
 }
+async function loadUserNotifications() {
+  const user = firebase.auth().currentUser;
+  if (!user) return;
+
+  const snapshot = await db
+    .collection("userNotifications")
+    .doc(user.uid)
+    .collection("notifications")
+    .orderBy("timestamp", "desc")
+    .get();
+
+  snapshot.forEach((doc) => {
+    const notif = doc.data();
+    // Display in your preferred HTML section
+    console.log("🔔", notif.message);
+  });
+}
 
 
 async function showMarketInterest(itemId) {
   const user = firebase.auth().currentUser;
 
-  // Check if the user is logged in
   if (!user) {
     showCustomAlert("🔐 You need to be logged in to express interest.", "info");
     return;
   }
 
-  console.log("User is logged in:", user.uid);
-
-  // Reference to the "interests" subcollection for the current item
-  const interestRef = db.collection("marketItems").doc(itemId).collection("interests").doc(user.uid);
+  const itemRef = db.collection("marketItems").doc(itemId);
+  const interestRef = itemRef.collection("interests").doc(user.uid);
   const interestDoc = await interestRef.get();
 
-  // Check if the user has already shown interest
   if (interestDoc.exists) {
     showCustomAlert("❌ You have already expressed interest in this item.", "info");
     return;
   }
 
-  console.log("User has not shown interest yet.");
-
-  // Update interest count in the UI
   const interestCountElement = document.getElementById(`marketInterestCount-${itemId}`);
   if (interestCountElement) {
     let interestCount = parseInt(interestCountElement.innerText) || 0;
     interestCount += 1;
     interestCountElement.innerText = interestCount;
-    console.log("Updated interest count:", interestCount);
-  } else {
-    console.log("Interest count element not found.");
   }
 
   try {
-    // Save the user's interest to Firestore
+    // Save user's interest
     await interestRef.set({
       userId: user.uid,
       timestamp: firebase.firestore.FieldValue.serverTimestamp()
     });
 
-    // Send admin notification
-    await sendMarketInterestNotification(itemId, user.displayName || user.email);
+    // Get item details
+    const itemSnap = await itemRef.get();
+    const item = itemSnap.data();
+    const posterId = item?.postedBy;
+    const itemName = item?.name || "this item";
+
+    // Get current user's name, phone number, and location from users collection
+    const userSnap = await db.collection("users").doc(user.uid).get();
+    const userInfo = userSnap.data();
+    const userName = userInfo?.fullName || user.displayName || user.email || "Someone";
+    const userPhone = userInfo?.phone || "No phone provided";
+    const userLocation = userInfo?.location || "No location provided";
+
+    // Notify Admin (with phone and location)
+    await sendMarketInterestNotification(itemId, userName, itemName, userPhone, userLocation);
+
+    // Notify poster if it's not the same person
+    if (posterId && posterId !== user.uid) {
+      await db.collection("alerts").add({
+        title: "❤️ New Interest",
+        message: `${userName} is interested in your item: "${itemName}".\n📞 Phone: ${userPhone}\n📍 Location: ${userLocation}`,
+        timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+        targetUserId: posterId
+      });
+    }
 
     showCustomAlert("✅ Your interest has been recorded!", "success");
+
   } catch (err) {
     console.error("Error recording interest:", err);
     showCustomAlert("❌ Failed to record your interest. Please try again later.", "error");
   }
 }
 
-// Create a notification for admins when a user expresses interest
-async function sendMarketInterestNotification(itemId, userName) {
-  const itemRef = db.collection("marketItems").doc(itemId);
-  const itemSnap = await itemRef.get();
-  const item = itemSnap.data();
-
-  const notificationRef = db.collection("adminNotifications").doc(); // New notification for admin
+// ✅ Create a notification for admins with phone and location
+async function sendMarketInterestNotification(itemId, userName, itemName, userPhone, userLocation) {
+  const notificationRef = db.collection("adminNotifications").doc();
 
   await notificationRef.set({
     type: "Market Interest",
-    message: `${userName} has expressed interest in "${item?.name || "this item"}".`,
+    message: `${userName} (📞 ${userPhone}, 📍 ${userLocation}) has expressed interest in "${itemName}".`,
     itemId: itemId,
     timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-    read: false // Initially marked as unread
+    read: false
   });
-
-  // Optionally, send other admin alerts (e.g., email or push notifications) here
 }
+
+
 
 async function openEditForm(itemId) {
   const itemRef = marketRef.doc(itemId);
@@ -8789,6 +9191,18 @@ function filterGallery() {
 function closeReviewModal() {
   document.getElementById("reviewModal").style.display = "none";
 }
+
+
+function toggleMenu(alertId) {
+  const menu = document.getElementById(`menu-${alertId}`);
+  menu.style.display = menu.style.display === "block" ? "none" : "block";
+
+  // Close others
+  document.querySelectorAll('.dropdown-content').forEach(el => {
+    if (el.id !== `menu-${alertId}`) el.style.display = "none";
+  });
+}
+
 // Listen to scroll event on the container
 const container = document.getElementById("soulmateContainer");
 const endMessage = document.getElementById("endOfListMessage");
