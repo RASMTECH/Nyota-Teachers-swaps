@@ -7437,7 +7437,6 @@ async function loadUserNotifications() {
   });
 }
 
-
 async function showMarketInterest(itemId) {
   const user = firebase.auth().currentUser;
 
@@ -7463,33 +7462,30 @@ async function showMarketInterest(itemId) {
   }
 
   try {
-    // Save user's interest
+    // Save interest
     await interestRef.set({
       userId: user.uid,
       timestamp: firebase.firestore.FieldValue.serverTimestamp()
     });
 
-    // Get item details
+    // ✅ Get item details including phone & location from marketItems
     const itemSnap = await itemRef.get();
     const item = itemSnap.data();
     const posterId = item?.postedBy;
     const itemName = item?.name || "this item";
+    const posterPhone = item?.phone || "No phone provided";
+    const posterLocation = `${item?.county || ""} ${item?.subcounty || ""}`.trim() || "No location provided";
 
-    // Get current user's name, phone number, and location from users collection
-    const userSnap = await db.collection("users").doc(user.uid).get();
-    const userInfo = userSnap.data();
-    const userName = userInfo?.fullName || user.displayName || user.email || "Someone";
-    const userPhone = userInfo?.phone || "No phone provided";
-    const userLocation = userInfo?.location || "No location provided";
+    const userName = user.displayName || user.email || "Someone";
 
-    // Notify Admin (with phone and location)
-    await sendMarketInterestNotification(itemId, userName, itemName, userPhone, userLocation);
+    // Notify Admin (plain text phone number)
+    await sendMarketInterestNotification(itemId, userName, itemName, posterPhone, posterLocation);
 
     // Notify poster if it's not the same person
     if (posterId && posterId !== user.uid) {
       await db.collection("alerts").add({
         title: "❤️ New Interest",
-        message: `${userName} is interested in your item: "${itemName}".\n📞 Phone: ${userPhone}\n📍 Location: ${userLocation}`,
+        message: `${userName} is interested in your item: "${itemName}".\n📞 Phone: ${posterPhone}\n📍 Location: ${posterLocation}`,
         timestamp: firebase.firestore.FieldValue.serverTimestamp(),
         targetUserId: posterId
       });
@@ -7503,18 +7499,18 @@ async function showMarketInterest(itemId) {
   }
 }
 
-// ✅ Create a notification for admins with phone and location
-async function sendMarketInterestNotification(itemId, userName, itemName, userPhone, userLocation) {
+// ✅ Admin notification function
+async function sendMarketInterestNotification(itemId, userName, itemName, phone, location) {
   const notificationRef = db.collection("adminNotifications").doc();
-
   await notificationRef.set({
     type: "Market Interest",
-    message: `${userName} (📞 ${userPhone}, 📍 ${userLocation}) has expressed interest in "${itemName}".`,
+    message: `${userName} (📞 ${phone}, 📍 ${location}) has expressed interest in "${itemName}".`,
     itemId: itemId,
     timestamp: firebase.firestore.FieldValue.serverTimestamp(),
     read: false
   });
 }
+
 
 
 
