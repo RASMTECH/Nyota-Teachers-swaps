@@ -2763,9 +2763,11 @@ Register To Connect With  Available Soulmates
 
 <!-- Seeking Services Section -->
 <div id="seekingServices" class="page" style="display:none;">
- <h2>
+ 
+<h2 style="display: flex; align-items: center; color: crimson;">
   <i class="fas fa-concierge-bell" style="color:#009688; margin-right: 8px;"></i>
- <h2 style="color: crimson;">Post Your Service</h2>
+  Post Your Service
+</h2>
 <div class="scrolling-banner">
   <div class="scrolling-banner-content">
     🌟 Try Mary's Salon in Kisumu | 📦 Order from Speedy Courier Services | 📱 Fix your phone at TechHub Eldoret | 🍔 Order lunch from Mama John's Kitchen | 📸 Book events with StarPix Photography | 🛠️ Car repairs at QuickFix Nairobi | 💻 Affordable Web Design by PixelStorm | 📷 Wedding shoots by EliteLens Studios
@@ -4232,14 +4234,14 @@ document.getElementById("bomJobForm").addEventListener("submit", async e => {
     // ✅ Admin Notification
     await db.collection("adminNotifications").add({
       type: "BOM Job Post",
-      message: `New BOM job posted: ${job.jobType} by ${job.organization}, Salary: ${job.salaryRange}, Phone: ${job.phone}, County: ${job.county}`,
+      message: `New  job posted: ${job.jobType} by ${job.organization}, Salary: ${job.salaryRange}, Phone: ${job.phone}, County: ${job.county}`,
       timestamp: firebase.firestore.FieldValue.serverTimestamp(),
       read: false
     });
 
     // ✅ Public Alert (visible to all users)
     const alertDoc = await db.collection("alerts").add({
-      title: "📢 New BOM Job",
+      title: "📢 New  Job",
       message: `${job.organization} just posted a ${job.jobType} job in ${job.county}, ${job.subCounty}. 💰 Salary: ${job.salaryRange}`,
       timestamp: firebase.firestore.FieldValue.serverTimestamp(),
       targetUserId: null,
@@ -4518,7 +4520,7 @@ else if (jobType.includes("maid")) iconClass = "fa-broom", bgColor = "#8bc34a"; 
         </button>` 
       : ` 
         <div class="blurred">
-          <p style="color:gray;">🔒 Contacts Locked – Pay Ksh 350 to Unlock for 2 Weeks</p>
+          <p style="color:gray;">🔒 Contacts Locked – Pay Ksh 350 to Unlock Contact</p>
         </div>
         <button onclick="unlockBomJobs()"
           style="background:crimson; color:white; padding:6px 12px; border:none; border-radius:6px;">
@@ -4884,7 +4886,7 @@ async function unlockBomJobs() {
     return;
   }
 
-  showPaymentModalFor("bomjobs", 350, currentUser.uid, "BOM Job Contacts");
+  showPaymentModalFor("bomjobs", 350, currentUser.uid, "Job Contacts");
 
   const checkPaid = setInterval(async () => {
     if (localStorage.getItem("paidForBomJobs") === "yes") {
@@ -7960,7 +7962,7 @@ async function initiateStkPayment(type, amount, itemId, itemName) {
 
 // ✅ Legacy compatibility shim
 function showPaymentModal() {
-  showPaymentModalFor("swap", 500, currentUser?.uid || "unknown", "Unlock VIP Swaps");
+  showPaymentModalFor("swap", 500, currentUser?.uid || "unknown", "Unlock Contacts Swaps");
 }
 
 // ✅ Optional: Use this helper for boost buttons
@@ -8513,39 +8515,93 @@ async function loadAdminNotifications() {
     .get();
 
   if (snapshot.empty) {
-    list.innerHTML = "<p>No admin notifications yet.</p>";
+    list.innerHTML = "<p style='color:#666; font-style: italic;'>No admin notifications yet.</p>";
     return;
   }
 
-  const batch = db.batch(); // 📦 To mark them all as read
+  const batch = db.batch(); // To mark notifications as read in batch
 
   snapshot.forEach(doc => {
     const d = doc.data();
 
-    // ✅ Mark as read
+    // Mark as read if unread
     if (d.read === false) {
       batch.update(doc.ref, { read: true });
     }
 
+    // Create notification item
     const li = document.createElement("li");
-    li.style.cssText = "margin-bottom:10px;padding:10px;border:1px solid #ccc;border-radius:8px;background:#f9f9f9;cursor:pointer;";
+    li.style.cssText = `
+      margin-bottom: 12px;
+      padding: 12px 16px;
+      border-radius: 10px;
+      cursor: pointer;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      transition: background-color 0.3s ease;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      position: relative;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: ${d.read ? '#e0f7fa' : '#fff3e0'};
+      border-left: 6px solid ${getNotificationColor(d.type)};
+    `;
 
-    // ✅ Handle click to scroll to item
+    // Hover effect
+    li.addEventListener('mouseenter', () => {
+      li.style.backgroundColor = '#dcedc8';
+    });
+    li.addEventListener('mouseleave', () => {
+      li.style.backgroundColor = d.read ? '#e0f7fa' : '#fff3e0';
+    });
+
+    // Click to open related item
     li.onclick = () => openPostedItem(d.type?.toLowerCase(), d.itemId);
 
     li.innerHTML = `
-      <b>${d.type}</b>: ${d.message}<br>
-      <small style="color:gray;">${new Date(d.timestamp?.toDate()).toLocaleString()}</small><br>
+      <strong style="font-size: 1.1em; color: ${getNotificationColor(d.type)};">${d.type}</strong>
+      <span style="color:#333; line-height: 1.4;">${d.message}</span>
+      <small style="color: #666; font-size: 0.85em;">${new Date(d.timestamp?.toDate()).toLocaleString()}</small>
       <button onclick="event.stopPropagation(); deleteNotification('${doc.id}')"
-              style="margin-top:6px;">🗑️ Delete</button>
+              style="
+                position: absolute;
+                top: 10px;
+                right: 10px;
+                border: none;
+                background: #f44336;
+                color: white;
+                border-radius: 4px;
+                padding: 4px 8px;
+                cursor: pointer;
+                font-size: 0.9em;
+                transition: background-color 0.3s ease;
+              "
+              onmouseenter="this.style.backgroundColor='#d32f2f'"
+              onmouseleave="this.style.backgroundColor='#f44336'">
+        🗑️ Delete
+      </button>
     `;
 
     list.appendChild(li);
   });
 
-  await batch.commit(); // ✅ Apply read updates
-  updateAdminNotifBadge(); // 🔄 Refresh badge
+  await batch.commit(); // Apply read updates
+  updateAdminNotifBadge(); // Refresh badge
+
+  // Helper function for color coding notification types
+  function getNotificationColor(type) {
+    if (!type) return '#607d8b'; // default gray
+
+    const t = type.toLowerCase();
+    if (t.includes('error') || t.includes('fail') || t.includes('delete')) return '#e53935'; // red
+    if (t.includes('success') || t.includes('completed') || t.includes('updated')) return '#43a047'; // green
+    if (t.includes('warning') || t.includes('caution')) return '#fbc02d'; // yellow
+    if (t.includes('info') || t.includes('notification')) return '#1e88e5'; // blue
+
+    return '#00796b'; // teal default for others
+  }
 }
+
 async function updateAdminNotifBadge() {
   const badge = document.getElementById("notifBadge");
   if (!isAdmin || !badge) return;
