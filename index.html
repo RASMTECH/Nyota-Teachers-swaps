@@ -2009,7 +2009,7 @@ header a {
 </div>
 
 <div id="allReviewsModal" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.6); justify-content:center; align-items:center; z-index:1000;">
-  <div style="background:#fff; padding:20px; width:90%; max-width:600px; max-height:80%; overflow:auto; border-radius:10px; position:relative;">
+  <div style="background:#fff; padding:20px; width:50%; max-width:600px; max-height:80%; overflow:auto; border-radius:10px; position:relative;">
     <span onclick="closeAllReviewsModal()" style="position:absolute; top:10px; right:20px; cursor:pointer; font-weight:bold; font-size:18px;">✖</span>
     <h3>💬 All Reviews</h3>
     <div id="allReviewsContainer" style="margin-top:10px;"></div>
@@ -4605,14 +4605,14 @@ else if (jobType.includes("maid")) iconClass = "fa-broom", bgColor = "#8bc34a"; 
   });
 }
 
-// Function to handle following a job
+// Function to handle following a job 
 function followJob(jobId) {
   const followButton = document.querySelector(`button[onclick="followJob('${jobId}')"]`);
   const followedCountElement = document.getElementById(`followed-count-${jobId}`);
   const user = firebase.auth().currentUser;
 
   if (!user) {
-    alert("Please log in to follow this job.");
+    showCustomAlert("Please log in to follow this job.", "error");
     return;
   }
 
@@ -4621,7 +4621,7 @@ function followJob(jobId) {
 
   jobRef.get().then(async docSnapshot => {
     if (!docSnapshot.exists) {
-      console.error("Job not found!");
+      showCustomAlert("Job not found.", "error");
       return;
     }
 
@@ -4643,7 +4643,9 @@ function followJob(jobId) {
         followedCountElement.textContent = `${currentCount - 1} following`;
       }
 
+      showCustomAlert("❌ You unfollowed this job.", "warning");
       console.log("Unfollowed the job successfully.");
+
     } else {
       // 👍 Follow
       followButton.innerText = "👀 Following Job";
@@ -4659,6 +4661,7 @@ function followJob(jobId) {
         followedCountElement.textContent = `${currentCount + 1} following`;
       }
 
+      showCustomAlert("✅ You are now following this job.", "success");
       console.log("Followed the job successfully.");
 
       // ✅ Notify the poster if not self
@@ -4676,8 +4679,10 @@ function followJob(jobId) {
     }
   }).catch((error) => {
     console.error("Error handling job follow: ", error);
+    showCustomAlert("❌ Failed to follow/unfollow job: " + error.message, "error");
   });
 }
+
 
 
 // Function to update the followed count on page load (in case of page refresh)
@@ -4706,7 +4711,7 @@ function showInterest(jobId) {
   const userId = user?.uid;
 
   if (!userId) {
-    alert("Please log in to show interest.");
+    showCustomAlert("Please log in to show interest.", "error");
     return;
   }
 
@@ -4715,7 +4720,7 @@ function showInterest(jobId) {
 
   jobRef.get().then(async docSnapshot => {
     if (!docSnapshot.exists) {
-      console.error("Job not found!");
+      showCustomAlert("Job not found.", "error");
       return;
     }
 
@@ -4723,27 +4728,7 @@ function showInterest(jobId) {
     const alreadyFollowed = jobData.followedUsers && jobData.followedUsers.includes(userId);
 
     if (alreadyFollowed) {
-      // ✅ Show custom alert
-      const alertBox = document.createElement("div");
-      alertBox.innerText = "⚠️ You’ve already shown interest in this job!";
-      alertBox.style.position = "fixed";
-      alertBox.style.top = "20px";
-      alertBox.style.right = "20px";
-      alertBox.style.backgroundColor = "#ffdddd";
-      alertBox.style.color = "#a94442";
-      alertBox.style.padding = "15px 20px";
-      alertBox.style.border = "1px solid #ebccd1";
-      alertBox.style.borderRadius = "8px";
-      alertBox.style.boxShadow = "0 2px 6px rgba(0,0,0,0.2)";
-      alertBox.style.zIndex = 9999;
-      alertBox.style.fontFamily = "Arial, sans-serif";
-      alertBox.style.fontSize = "14px";
-
-      document.body.appendChild(alertBox);
-      setTimeout(() => {
-        document.body.removeChild(alertBox);
-      }, 3000);
-
+      showCustomAlert("⚠️ You’ve already shown interest in this job!", "warning");
       return;
     }
 
@@ -4763,6 +4748,7 @@ function showInterest(jobId) {
     }
 
     console.log("Followed count updated successfully.");
+    showCustomAlert("✅ You’ve shown interest in this job.", "success");
 
     // ✅ Notify Admin
     await firebase.firestore().collection("adminNotifications").add({
@@ -4791,6 +4777,7 @@ function showInterest(jobId) {
 
   }).catch((error) => {
     console.error("Error fetching job data: ", error);
+    showCustomAlert("❌ Failed to register interest: " + error.message, "error");
   });
 }
 
@@ -6210,12 +6197,11 @@ async function submitServiceHandler(e) {
     showCustomAlert("❌ Error: " + err.message, "error");
   }
 }
-
 async function loadServices() {
   const container = document.getElementById("servicesContainer");
   const trendingContainer = document.getElementById("trendingContainer");
   container.innerHTML = "";
-  trendingContainer.innerHTML = "";
+  if (trendingContainer) trendingContainer.innerHTML = "";
 
   const snapshot = await servicesRef.orderBy("timestamp", "desc").get();
   if (snapshot.empty) {
@@ -6235,9 +6221,7 @@ async function loadServices() {
   if (currentUser?.uid) {
     const doc = await firebase.firestore().collection("users").doc(currentUser.uid).get();
     hasServiceAccess = doc.exists && doc.data()?.paidForService === true;
-    if (hasServiceAccess) {
-      localStorage.setItem("paidForService", "yes");
-    }
+    if (hasServiceAccess) localStorage.setItem("paidForService", "yes");
   }
 
   const boosted = [], normal = [];
@@ -6253,11 +6237,8 @@ async function loadServices() {
       await servicesRef.doc(d.id).update({ boosted: false, boostExpiry: null });
     }
 
-    if (isBoosted) {
-      boosted.push(d);
-    } else {
-      normal.push(d);
-    }
+    if (isBoosted) boosted.push(d);
+    else normal.push(d);
   }
 
   const finalServices = [...boosted.sort((a, b) => b.boostExpiry?.toDate?.() - a.boostExpiry?.toDate?.()), ...normal];
@@ -6270,7 +6251,8 @@ async function loadServices() {
     const isBoosted = d.boosted && boostExpiry && boostExpiry > nowTime;
 
     const verifiedBadge = d.postedBy
-      ? `<span class="verified-badge"><i class="fas fa-check-circle"></i> Verified</span>` : "";
+      ? `<span class="verified-badge"><i class="fas fa-check-circle"></i> Verified</span>`
+      : "";
 
     let boostBadge = "";
     if (isBoosted) {
@@ -6281,7 +6263,6 @@ async function loadServices() {
         </span>`;
     }
 
-    // Interest Count
     const interestCount = d.interestedUsers ? d.interestedUsers.length : 0;
     const interestCountText = `${interestCount} ${interestCount === 1 ? "person" : "people"} interested`;
 
@@ -6320,7 +6301,6 @@ async function loadServices() {
           💳 Pay Ksh 200
         </button>`;
 
-    // Action Buttons: Boost, Edit, Delete, and Activate/Deactivate
     const actionButtonsHTML = `
       ${isPoster || isAdminUser ? `
         <button onclick="${isAdminUser ? `boostServiceDirectly('${id}')` : `showPaymentModalFor('serviceBoost', 300, '${id}', '${d.name}')`}"
@@ -6381,7 +6361,6 @@ async function loadServices() {
         <p style="color:#d32f2f;"><strong>Occupation:</strong> <span class="highlight-occupation">${d.occupation}</span></p>
         <p style="color:#6a1b9a;"><strong>${experienceIcon}Experience:</strong> ${d.experience} years</p>
 
-        <!-- Service Activation Status -->
         <p style="color: ${d.isActive ? '#4caf50' : '#f44336'}; font-weight: bold;">
           ${d.isActive ? '✅ Service Active' : '❌ Service Inactive'}
         </p>
@@ -6394,10 +6373,8 @@ async function loadServices() {
           ${actionButtonsHTML}
         </div>
 
-        <!-- Interest Count -->
         <p id="interest-count-${id}" style="color: #f44336; font-size: 1em; margin-top: 10px;">${interestCountText}</p>
 
-        <!-- Customer Reviews Section -->
         <div style="margin-top:10px;">
           <h4 style="color:#4CAF50;">📢 Customer Reviews</h4>
           <div id="marketReviews-${id}" style="margin-top:10px;font-size:14px;"></div>
@@ -6405,18 +6382,124 @@ async function loadServices() {
             <button onclick="openAllReviewsModal('${id}')" style="background:#03a9f4;color:#fff;border:none;border-radius:5px;padding:6px 12px;">💬 View All Reviews</button>
           </div>
         </div>
+
+        <!-- Star Rating -->
+        <div id="star-rating-${id}" class="star-rating" style="margin-top:12px;">
+          <span data-value="1" class="star">&#9734;</span>
+          <span data-value="2" class="star">&#9734;</span>
+          <span data-value="3" class="star">&#9734;</span>
+          <span data-value="4" class="star">&#9734;</span>
+          <span data-value="5" class="star">&#9734;</span>
+          <span id="average-rating-${id}" style="margin-left:10px; color:#ffb400; font-weight:bold;"></span>
+        </div>
       </div>
     `;
 
     container.appendChild(card);
 
     if (isBoosted && trendingContainer) {
-      trendingContainer.appendChild(card.cloneNode(true));
+      const clonedCard = card.cloneNode(true);
+      // Update IDs inside clone to prevent duplicates:
+      clonedCard.id = `trending-service-${id}`;
+      const interestCountElem = clonedCard.querySelector(`#interest-count-${id}`);
+      if (interestCountElem) interestCountElem.id = `interest-count-trending-${id}`;
+      trendingContainer.appendChild(clonedCard);
     }
 
+    setupStarRating(id);
     updateAverageRating(id);
   }
 }
+
+// Star Rating Helpers (add these outside loadServices)
+
+function setupStarRating(serviceId) {
+  const stars = document.querySelectorAll(`#star-rating-${serviceId} .star`);
+  let userRating = 0;
+
+  stars.forEach(star => {
+    star.addEventListener("mouseenter", () => {
+      highlightStars(serviceId, star.dataset.value);
+    });
+    star.addEventListener("mouseleave", () => {
+      highlightStars(serviceId, userRating);
+    });
+    star.addEventListener("click", async () => {
+      userRating = parseInt(star.dataset.value);
+      await saveUserRating(serviceId, userRating);
+      highlightStars(serviceId, userRating);
+      await updateAverageRating(serviceId);
+    });
+  });
+
+  loadUserRating(serviceId).then(rating => {
+    userRating = rating || 0;
+    highlightStars(serviceId, userRating);
+  });
+}
+
+function highlightStars(serviceId, rating) {
+  const stars = document.querySelectorAll(`#star-rating-${serviceId} .star`);
+  stars.forEach(star => {
+    if (star.dataset.value <= rating) {
+      star.classList.add("selected");
+    } else {
+      star.classList.remove("selected");
+    }
+  });
+}
+
+async function saveUserRating(serviceId, rating) {
+  if (!currentUser?.uid) {
+    alert("Please log in to rate services.");
+    return;
+  }
+  try {
+    const ratingRef = servicesRef.doc(serviceId).collection("ratings").doc(currentUser.uid);
+    await ratingRef.set({
+      rating,
+      timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+      userId: currentUser.uid,
+      serviceId,
+    });
+  } catch (error) {
+    console.error("Error saving rating:", error);
+  }
+}
+
+async function loadUserRating(serviceId) {
+  if (!currentUser?.uid) return 0;
+  try {
+    const ratingDoc = await servicesRef.doc(serviceId).collection("ratings").doc(currentUser.uid).get();
+    if (ratingDoc.exists) {
+      return ratingDoc.data().rating || 0;
+    }
+  } catch (error) {
+    console.error("Error loading user rating:", error);
+  }
+  return 0;
+}
+
+async function updateAverageRating(serviceId) {
+  try {
+    const ratingsSnapshot = await servicesRef.doc(serviceId).collection("ratings").get();
+    let sum = 0, count = 0;
+    ratingsSnapshot.forEach(doc => {
+      sum += doc.data().rating || 0;
+      count++;
+    });
+    const avg = count ? (sum / count) : 0;
+    const avgRounded = avg.toFixed(1);
+
+    const avgElem = document.getElementById(`average-rating-${serviceId}`);
+    if (avgElem) {
+      avgElem.textContent = `Avg: ${avgRounded} ★ (${count})`;
+    }
+  } catch (error) {
+    console.error("Error calculating average rating:", error);
+  }
+}
+
 
 
 async function toggleServiceStatus(serviceId) {
@@ -6446,58 +6529,6 @@ async function toggleServiceStatus(serviceId) {
   } catch (error) {
     console.error("Error toggling service status:", error);
     alert("Error updating service status.");
-  }
-}
-async function showInterest(serviceId) {
-  const currentUserUid = currentUser?.uid;
-  if (!currentUserUid) {
-    showCustomAlert("⚠️ Please log in to show interest.");
-    return;
-  }
-
-  try {
-    const serviceRef = servicesRef.doc(serviceId);
-    const serviceDoc = await serviceRef.get();
-
-    if (!serviceDoc.exists) {
-      console.error("Service not found.");
-      return;
-    }
-
-    const serviceData = serviceDoc.data();
-    const interestedUsers = serviceData.interestedUsers || [];
-
-    if (interestedUsers.includes(currentUserUid)) {
-      showCustomAlert("✅ You've already shown interest in this service.");
-      return;
-    }
-
-    interestedUsers.push(currentUserUid);
-    await serviceRef.update({ interestedUsers });
-
-    const posterId = serviceData.postedBy;
-    if (posterId && posterId !== currentUserUid) {
-      await db.collection("alerts").add({
-        title: "📌 New Interest in Your Service",
-        message: `${currentUser.displayName || "Someone"} is interested in your service: ${serviceData.name || "Unnamed Service"}`,
-        timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-        targetUserId: posterId,
-        section: "services",
-        relatedId: serviceId
-      });
-    }
-
-    const updatedInterestCount = interestedUsers.length;
-    const interestCountElement = document.getElementById(`interest-count-${serviceId}`);
-    if (interestCountElement) {
-      interestCountElement.textContent = `${updatedInterestCount} ${updatedInterestCount === 1 ? "person" : "people"} interested`;
-    }
-
-    showCustomAlert("🎉 Your interest has been registered successfully!");
-
-  } catch (error) {
-    console.error("❌ Error showing interest:", error.message || error);
-    showCustomAlert("Something went wrong. Please try again.");
   }
 }
 
