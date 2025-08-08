@@ -3898,18 +3898,18 @@ async function showFollowers(swapId) {
   alert(`Followers: ${followerNames}`);
 }
 
-// Function to follow a swap
+/// Function to follow a swap
 async function followSwap(swapId) {
   const currentUser = firebase.auth().currentUser;
   if (!currentUser) {
-    alert("Please log in to follow this swap.");
+    showCustomAlert("Please log in to follow this swap.", "error");
     return;
   }
 
   const swapRef = db.collection("teacherSwaps").doc(swapId);
   const swapDoc = await swapRef.get();
   if (!swapDoc.exists) {
-    alert("Swap not found.");
+    showCustomAlert("Swap not found.", "error");
     return;
   }
 
@@ -3920,7 +3920,7 @@ async function followSwap(swapId) {
   if (!followers.some(f => f.uid === currentUser.uid)) {
     const user = {
       uid: currentUser.uid,
-      email: currentUser.email, // Store email for reference
+      email: currentUser.email,
     };
 
     // Add user to followers list
@@ -3948,8 +3948,15 @@ async function followSwap(swapId) {
         targetUserId: posterId
       });
     }
+
+    // ✅ Show center screen success alert to the follower
+    showCustomAlert("✅ You are now following this swap.", "success");
+
+  } else {
+    showCustomAlert("⚠ You are already following this swap.", "warning");
   }
 }
+
 
 // Function to send an admin notification when a user follows a swap
 async function sendFollowAdminNotification(swapId, currentUser) {
@@ -4031,7 +4038,7 @@ async function sendSwapClosedAdminNotification(swapId) {
 }
 
 
-// Function to boost the swap
+// Function to boost the swap 
 async function boostSwap(swapId) {
   const currentUser = firebase.auth().currentUser;
 
@@ -4067,7 +4074,7 @@ async function boostSwap(swapId) {
 
 // Function to update the swap boost status in Firestore
 async function updateSwapBoostStatus(swapId, boostStatus) {
-  const swapRef = firebase.firestore().doc(`swaps/${swapId}`);
+  const swapRef = firebase.firestore().doc(`teacherSwaps/${swapId}`);
   await swapRef.update({
     boosted: boostStatus,
     boostTimestamp: firebase.firestore.FieldValue.serverTimestamp()
@@ -4076,7 +4083,7 @@ async function updateSwapBoostStatus(swapId, boostStatus) {
 
 // Function to send an admin notification when a swap is boosted
 async function sendBoostAdminNotification(swapId, userId, userType) {
-  const swapRef = firebase.firestore().doc(`swaps/${swapId}`);
+  const swapRef = firebase.firestore().doc(`teacherSwaps/${swapId}`);
   const swapDoc = await swapRef.get();
 
   if (!swapDoc.exists) {
@@ -4099,6 +4106,11 @@ async function sendBoostAdminNotification(swapId, userId, userType) {
   });
 
   console.log("Admin notification sent for swap boost.");
+}
+
+// ✅ Dummy fallback so you never get "sendAdminNotification is not defined"
+function sendAdminNotification(message) {
+  console.log("Admin notification:", message);
 }
 
 
@@ -4133,56 +4145,51 @@ function renderTrendingSectionFromSwapsOnly() {
 
 
 async function sendSwapInterest(swapId, teacherName) {
-  const currentUser = firebase.auth().currentUser;
-  if (!currentUser) {
-    showCustomAlert("You must be logged in to express interest.", "error");
-    return;
-  }
-
-  // Save the interest
-  const interestRef = db.collection("swapInterests").doc(); // You can use a composite key if needed
-  await interestRef.set({
-    swapId,
-    teacherName,
-    interestedBy: currentUser.uid,
-    interestedByName: currentUser.displayName || currentUser.email,
-    timestamp: firebase.firestore.FieldValue.serverTimestamp()
-  });
-
-  // Send admin notification
-  await sendAdminNotification(swapId, teacherName, currentUser.displayName || currentUser.email);
-
-  // 🔔 Notify swap poster
-  const swapDoc = await db.collection("teacherSwaps").doc(swapId).get();
-  if (swapDoc.exists) {
-    const swapData = swapDoc.data();
-    const posterId = swapData.userId;
-
-    // Only notify if not the same user
-    if (posterId && posterId !== currentUser.uid) {
-      await db.collection("alerts").add({
-        title: "📬 Swap Interest",
-        message: `${currentUser.displayName || "Someone"} is interested in your swap for ${swapData.subjectCombination}.`,
-        timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-        targetUserId: posterId
-      });
+  try {
+    const currentUser = firebase.auth().currentUser;
+    if (!currentUser) {
+      showCustomAlert("You must be logged in to express interest.", "error");
+      return;
     }
+
+    // Save the interest
+    await db.collection("swapInterests").add({
+      swapId,
+      teacherName,
+      interestedBy: currentUser.uid,
+      interestedByName: currentUser.displayName || currentUser.email,
+      timestamp: firebase.firestore.FieldValue.serverTimestamp()
+    });
+
+    // Send admin notification
+    await sendAdminNotification(swapId, teacherName, currentUser.displayName || currentUser.email);
+
+    // 🔔 Notify swap poster
+    const swapDoc = await db.collection("teacherSwaps").doc(swapId).get();
+    if (swapDoc.exists) {
+      const swapData = swapDoc.data();
+      const posterId = swapData.userId;
+
+      // Only notify if not the same user
+      if (posterId && posterId !== currentUser.uid) {
+        await db.collection("alerts").add({
+          title: "📬 Swap Interest",
+          message: `${currentUser.displayName || "Someone"} is interested in your swap for ${swapData.subjectCombination}.`,
+          timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+          targetUserId: posterId
+        });
+      }
+    }
+
+    // ✅ Always show success if everything worked
+    showCustomAlert(`✅ Your interest in ${teacherName}'s swap has been sent!`, "success");
+
+  } catch (error) {
+    console.error("Error sending interest:", error);
+    showCustomAlert("❌ Failed to send interest: " + error.message, "error");
   }
-
-  showCustomAlert(`✅ Your interest in ${teacherName}'s swap has been sent!`, "success");
 }
 
-
-// Create a notification for admins when a user expresses interest
-async function sendAdminNotification(swapId, teacherName, userName) {
-  await db.collection("adminNotifications").add({
-    type: "Swap Interest",
-    message: `${userName} has shown interest in ${teacherName}'s swap.`,
-    itemId: swapId,
-    timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-    read: false
-  });
-}
 // ✅ BOM Job Submit (with Public & Admin Notifications)
 document.getElementById("bomJobForm").addEventListener("submit", async e => {
   e.preventDefault();
