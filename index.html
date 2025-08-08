@@ -1699,6 +1699,7 @@ header a {
 <div id="loggedInUser" style="position:absolute; top:15px; right:20px; color:white; font-weight:bold;"></div>
 <nav style="background-image: url('https://i.imgur.com/JCxt71v.jpeg'); background-size: cover; background-position: center; padding: 20px 20px;">
 
+  
   <ul>
     <li><a class="menu-box" href="#" onclick="showPage('home')">
       <img src="https://i.imgur.com/lek58ah.jpeg" alt="Home">
@@ -1751,7 +1752,7 @@ header a {
     </li>
 
     <li><a class="menu-box" href="#" onclick="showPage('trendingSection'); loadTrendingItems();">
-      <img src="https://i.imgur.com/DmfP8G0.jpeg" alt="Trending">
+      <img src="https://i.imgur.com/SjtDlJi.jpeg" alt="Trending">
       <span>🔥 Trending</span></a>
     </li>
 
@@ -1762,15 +1763,10 @@ header a {
 
     <li>
       <a class="menu-box" href="#" onclick="showPage('notifications')" style="position: relative;">
-        <img src="https://i.imgur.com/CxqozEC.jpeg" alt="Notifications">
+        <img src="https://i.imgur.com/PBto8RH.jpeg" alt="Notifications">
         <span>Notifications</span>
         <span id="notifBadge">0</span>
       </a>
-    </li>
-
-    <li><a class="menu-box" href="#" onclick="showMyChats()">
-      <img src="https://i.imgur.com/6su2d7i.jpeg" alt="My Chats">
-      <span>My Chats</span></a>
     </li>
 
     <li><a class="menu-box" href="#" onclick="showPage('contact')">
@@ -1780,16 +1776,26 @@ header a {
 
 <li>
   <a class="menu-box" href="#" onclick="loadAlerts()">
-    <img src="https://i.imgur.com/QyvcpQ7.jpeg" alt="Alerts"> <!-- Replace with your preferred alert icon -->
+    <img src="https://i.imgur.com/IvZc6We.jpeg" alt="Alerts"> <!-- Replace with your preferred alert icon -->
     <span>Alerts</span>
   </a>
+
+<li>
+  <a class="menu-box" href="#" onclick="openMessagesPage()" style="position:relative;">
+    <img src="https://i.imgur.com/XBAeDCN.jpeg" alt="Messages"> <!-- Replace with your preferred messages icon -->
+    <span>Messages</span>
+    <span id="messagesUnreadBadge" style="display:none; background:red; color:white; border-radius:50%; padding:2px 6px; font-size:11px; position:absolute; top:0; right:0;"></span>
+  </a>
 </li>
+
 
   </ul>
 </nav>
 
 
 </header>
+
+
 
 
 <!-- Gallery Section -->
@@ -3825,7 +3831,7 @@ async function loadSwaps() {
         const followButton = `
           <button onclick="followSwap('${s.id}')"
             style="background:#e91e63;color:white;padding:6px 12px;font-size:13px;border:none;border-radius:6px;cursor:pointer;">
-            🧑‍🤝‍🧑 Follow Swap
+            🧑🤝🧑 Follow Swap
           </button>`;
 
         const interestCount = s.interestedUsers ? s.interestedUsers.length : 0;
@@ -9327,3 +9333,4 @@ container.addEventListener("scroll", function () {
 
 </body>
 </html>
+
