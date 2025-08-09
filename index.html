@@ -1842,18 +1842,46 @@ header a {
 <div id="usageHelp" class="page" style="display:none; padding: 20px;">
   <h2 style="color:#2196f3; text-align:center;">📘 How to Use the System</h2>
   <div style="max-width:800px;margin:auto;background:#f9f9f9;padding:20px;border-radius:10px;">
-    <ul style="line-height:1.7;">
-      <li>✅ <strong>Register</strong> before using any features.</li>
-      <li>🔄 Use the <strong>Swaps</strong> section to find transfer opportunities.</li>
-      <li>❤️ <strong>Soulmate</strong> helps you discover and connect with others.</li>
-      <li>🛍️ <strong>Market</strong> lets you sell or buy items easily.</li>
-      <li>🛠️ <strong>Services</strong> and <strong>Jobs</strong> let you post skills or vacancies.</li>
-      <li>💳 <strong>Boost</strong> your listing to appear in 🔥 Trending for 7 days.</li>
-      <li>🔐 You may need to <strong>pay</strong> via MPESA to unlock contacts.</li>
+    <ul style="line-height:1.7; list-style:none; padding:0;">
+      
+      <li><a href="#" onclick="showPage('home')"><img src="https://i.imgur.com/lek58ah.jpeg" style="width:24px; vertical-align:middle; margin-right:8px;"> <strong>Home</strong></a> – See latest updates, featured jobs, market items, and quick links to other sections.</li>
+      
+      <li><a href="#" onclick="showPage('login')"><img src="https://i.imgur.com/TsXskJc.jpeg" style="width:24px; vertical-align:middle; margin-right:8px;"> <strong>Login</strong></a> – Enter your email and password to access your account. Use “Forgot Password” if needed.</li>
+      
+      <li><a href="#" onclick="showPage('register')"><img src="https://i.imgur.com/jKZaOkH.jpeg" style="width:24px; vertical-align:middle; margin-right:8px;"> <strong>Register</strong></a> – Create a new account by filling in your name, email, and password.</li>
+      
+      <li><a href="#" onclick="showPage('notifications')"><img src="https://i.imgur.com/PBto8RH.jpeg" style="width:24px; vertical-align:middle; margin-right:8px;"> <strong>Admin Notifications</strong></a> – (Admins only) See system updates, reports, and approvals.</li>
+      
+      <li><a href="#" onclick="loadAlerts()"><img src="https://i.imgur.com/IvZc6We.jpeg" style="width:24px; vertical-align:middle; margin-right:8px;"> <strong>Alerts</strong></a> – Notifications when someone shows interest in your listing, follows you, or interacts with your posts.</li>
+      
+      <li><a href="#" onclick="openMessagesPage()"><img src="https://i.imgur.com/XBAeDCN.jpeg" style="width:24px; vertical-align:middle; margin-right:8px;"> <strong>Messages</strong></a> – View and reply to job, market, swap, or service chats. Unread messages are highlighted.</li>
+      
+      <li><a href="#" onclick="showPage('bomJobs')"><img src="https://i.imgur.com/8KM6Rib.jpeg" style="width:24px; vertical-align:middle; margin-right:8px;"> <strong>My Jobs</strong></a> – Post jobs, view applicants, show interest in other jobs, follow updates, unlock contacts, close/reopen jobs, and leave ratings.</li>
+      
+      <li><a href="#" onclick="showPage('swaps')"><img src="https://i.imgur.com/iqBwsWm.png" style="width:24px; vertical-align:middle; margin-right:8px;"> <strong>Swaps</strong></a> – Browse and post swap listings (trade/exchange offers). Contact owners via chat or phone.</li>
+      
+      <li><a href="#" onclick="showPage('seekingServices')"><img src="https://i.imgur.com/P1tHi7L.jpeg" style="width:24px; vertical-align:middle; margin-right:8px;"> <strong>Services</strong></a> – Browse or post services and contact providers directly once unlocked.</li>
+      
+      <li><a href="#" onclick="showPage('market')"><img src="https://i.imgur.com/P1MIsGM.jpeg" style="width:24px; vertical-align:middle; margin-right:8px;"> <strong>Market</strong></a> – Buy or sell products. Use search and filters. Post your own items for sale.</li>
+      
+      <li><a href="#" onclick="showPage('soulmates')"><img src="https://i.imgur.com/FJjbSK9.jpeg" style="width:24px; vertical-align:middle; margin-right:8px;"> <strong>Soulmate</strong></a> – Discover and connect with people for social or personal networking.</li>
+      
+      <li><a href="#" onclick="showPage('resources')"><img src="https://i.imgur.com/GavIBlL.jpeg" style="width:24px; vertical-align:middle; margin-right:8px;"> <strong>Resources</strong></a> – Access useful information, guides, and learning materials.</li>
+      
+      <li><a href="#" onclick="showPage('trendingSection'); loadTrendingItems();"><img src="https://i.imgur.com/SjtDlJi.jpeg" style="width:24px; vertical-align:middle; margin-right:8px;"> <strong>🔥 Trending</strong></a> – See popular boosted jobs, services, and items. Boost your listing for 7 days to appear here.</li>
+      
+      <li><a href="#" onclick="showPage('usageHelp')"><img src="https://i.imgur.com/tHuRu3z.jpeg" style="width:24px; vertical-align:middle; margin-right:8px;"> <strong>📘 How to Use</strong></a> – Read this guide anytime to understand all features.</li>
+      
+      <li><a href="#" onclick="showPage('contact')"><img src="https://i.imgur.com/SPqGvz9.jpeg" style="width:24px; vertical-align:middle; margin-right:8px;"> <strong>Contact Us</strong></a> – Reach the admin team via email, phone, or WhatsApp.</li>
+      
+      <li>💳 <strong>Payments</strong> – Pay via MPESA to unlock job or service contacts, or access premium features like boosting listings.</li>
+      
+      <li>🚀 <strong>Boost Listings</strong> – Make your job or item appear in the 🔥 Trending section for 7 days.</li>
     </ul>
-    <p style="color:#888;font-style:italic;">Need help? Contact admin or check the Notifications tab for updates.</p>
+    <p style="color:#888;font-style:italic;">💡 Tip: Keep your profile updated, check 🔥 Trending daily, and use chat for faster responses.</p>
   </div>
 </div>
+
 
 <div id="alertsContainer" class="page" style="display: none; padding: 20px;">
   <h2>📢 Market Alerts</h2>
