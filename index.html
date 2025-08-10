@@ -2739,30 +2739,41 @@ Register To Connect With  Available Soulmates
 <form id="serviceForm" style="max-width:420px;margin:20px auto;padding:20px;background:#f0f4f8;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
   <h2 style="text-align:center;color:#00796b;margin-bottom:16px;">📋 Post a Service</h2>
 
+  <!-- Hidden field for service ID (used for updates) -->
+  <input type="hidden" id="serviceId" />
+
+  <!-- Name Input -->
   <label for="svcName" style="color:#333;font-weight:bold;">Name:</label>
   <input type="text" id="svcName" required style="width:100%;padding:10px;margin:6px 0 12px;border:1px solid #ccc;border-radius:6px;"/>
 
+  <!-- County Dropdown -->
   <label for="svcCounty" style="color:#333;font-weight:bold;">County:</label>
   <select id="svcCounty" required style="width:100%;padding:10px;margin:6px 0 12px;border:1px solid #ccc;border-radius:6px;"></select>
 
+  <!-- Sub-county Dropdown -->
   <label for="svcSubCounty" style="color:#333;font-weight:bold;">Sub-county:</label>
   <select id="svcSubCounty" required style="width:100%;padding:10px;margin:6px 0 12px;border:1px solid #ccc;border-radius:6px;">
     <option value="">Select Sub-county</option>
   </select>
 
+  <!-- Occupation Input -->
   <label for="svcOccupation" style="color:#333;font-weight:bold;">Occupation:</label>
   <input type="text" id="svcOccupation" required style="width:100%;padding:10px;margin:6px 0 12px;border:1px solid #ccc;border-radius:6px;"/>
 
+  <!-- Experience Input -->
   <label for="svcExperience" style="color:#333;font-weight:bold;">Experience (in years):</label>
   <input type="number" id="svcExperience" required style="width:100%;padding:10px;margin:6px 0 12px;border:1px solid #ccc;border-radius:6px;"/>
 
+  <!-- Phone Input -->
   <label for="svcPhone" style="color:#333;font-weight:bold;">Phone Number:</label>
   <input type="tel" id="svcPhone" required style="width:100%;padding:10px;margin:6px 0 18px;border:1px solid #ccc;border-radius:6px;"/>
 
+  <!-- Submit Button -->
   <button type="submit" style="width:100%;background:#00796b;color:white;padding:12px;border:none;border-radius:8px;font-size:16px;cursor:pointer;">
     <i class="fas fa-concierge-bell"></i> Submit Service
   </button>
 </form>
+
 
  <img src="https://i.imgur.com/qUGmfzC.jpeg " alt="Left Side" class="side-image" />
  <img src="https://i.imgur.com/V2t9pgK.jpeg " alt="Left Side" class="side-image" />
@@ -6228,7 +6239,6 @@ function attachServiceFormSubmit() {
   const form = document.getElementById("serviceForm");
   form.addEventListener("submit", submitServiceHandler);
 }
-
 async function submitServiceHandler(e) {
   e.preventDefault();
 
@@ -6239,17 +6249,6 @@ async function submitServiceHandler(e) {
 
   // Show the spinner while processing
   document.getElementById("loadingSpinner").style.display = "flex";
-
-  // ✅ Check how many services this user has already posted
-  const serviceCountSnap = await servicesRef.where("postedBy", "==", currentUser.uid).get();
-  const totalServices = serviceCountSnap.size;
-
-  // ✅ If already posted 1 service, require payment — unless admin
-  if (totalServices >= 1 && !isAdmin) {
-    showPaymentModalFor("service", 200, currentUser.uid, "Post Extra Service");
-    document.getElementById("loadingSpinner").style.display = "none"; // Hide spinner if payment modal is shown
-    return;
-  }
 
   // ✅ Collect form input values
   const data = {
@@ -6269,30 +6268,53 @@ async function submitServiceHandler(e) {
     return alert("Please fill all fields.");
   }
 
+  const serviceId = document.getElementById("serviceId")?.value; // Check if the form has a serviceId (for updating)
+
   try {
-    // ✅ Save to Firestore
-    await servicesRef.add(data);
-    showCustomAlert("✅ Service posted!", "success");
+    if (serviceId) {
+      // **Updating an existing service**
+      await servicesRef.doc(serviceId).update(data); // Update service by ID
+      showCustomAlert("✅ Service updated!", "success");
+
+    } else {
+      // **Posting a new service**
+      // ✅ Check how many services this user has already posted
+      const serviceCountSnap = await servicesRef.where("postedBy", "==", currentUser.uid).get();
+      const totalServices = serviceCountSnap.size;
+
+      // ✅ If already posted 1 service, require payment — unless admin
+      if (totalServices >= 1 && !isAdmin) {
+        showPaymentModalFor("service", 200, currentUser.uid, "Post Extra Service");
+        document.getElementById("loadingSpinner").style.display = "none"; // Hide spinner if payment modal is shown
+        return;
+      }
+
+      // Save to Firestore as a new service
+      await servicesRef.add(data);
+      showCustomAlert("✅ Service posted!", "success");
+
+      // Admin Notification
+      await db.collection("adminNotifications").add({
+        type: "Marketplace Post",
+        message: `New service posted: ${data.name} (${data.occupation}), County: ${data.county}, Phone: ${data.phone}`,
+        timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+        read: false
+      });
+
+      // Public Alert for All Users
+      await db.collection("alerts").add({
+        title: "🛠️ New Service",
+        message: `${data.name} offers ${data.occupation} services in ${data.county}, ${data.subcounty}.`,
+        timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+        targetUserId: null,
+        category: "service",
+        county: data.county
+      });
+    }
+
+    // Reset the form and reload services
     document.getElementById("serviceForm").reset();
-    loadServices();
-
-    // ✅ Admin Notification
-    await db.collection("adminNotifications").add({
-      type: "Marketplace Post",
-      message: `New service posted: ${data.name} (${data.occupation}), County: ${data.county}, Phone: ${data.phone}`,
-      timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-      read: false
-    });
-
-    // ✅ Public Alert for All Users
-    await db.collection("alerts").add({
-      title: "🛠️ New Service",
-      message: `${data.name} offers ${data.occupation} services in ${data.county}, ${data.subcounty}.`,
-      timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-      targetUserId: null,
-      category: "service",
-      county: data.county
-    });
+    loadServices(); // Refresh service list
 
   } catch (err) {
     showCustomAlert("❌ Error: " + err.message, "error");
@@ -6301,6 +6323,7 @@ async function submitServiceHandler(e) {
     document.getElementById("loadingSpinner").style.display = "none";
   }
 }
+
 
 async function loadServices() {
   const container = document.getElementById("servicesContainer");
@@ -6609,6 +6632,122 @@ else if (occupation.includes("laundry")) iconClass = "fa-soap", bgColor = "#4dd0
 
     setupStarRating(id);
     updateAverageRating(id);
+  }
+}
+// Edit service functionality
+function editService(id) {
+  // Fetch the service data using the service ID
+  servicesRef.doc(id).get().then(doc => {
+    if (doc.exists) {
+      const data = doc.data();
+
+      // Pre-fill the form with the existing service data
+      document.getElementById("svcName").value = data.name;
+      document.getElementById("svcCounty").value = data.county;
+      document.getElementById("svcSubCounty").value = data.subcounty;
+      document.getElementById("svcOccupation").value = data.occupation;
+      document.getElementById("svcExperience").value = data.experience;
+      document.getElementById("svcPhone").value = data.phone;
+
+      // Set the service ID in the hidden input field for updating
+      document.getElementById("serviceId").value = id;
+
+      // Change the button text to "Update Service"
+      const btn = document.querySelector("#serviceForm button");
+      btn.innerHTML = "Update Service";
+
+      // Show the service update form (assuming it's hidden by default)
+      document.getElementById("serviceForm").style.display = "block";
+    } else {
+      showCustomAlert("Service not found.", "error");
+    }
+  });
+}
+
+// Updated submit service handler (handles both posting and updating)
+async function submitServiceHandler(e) {
+  e.preventDefault();
+
+  if (!isLoggedIn || !currentUser) {
+    showPage("login");
+    return alert("You must be logged in.");
+  }
+
+  // Show the spinner while processing
+  document.getElementById("loadingSpinner").style.display = "flex";
+
+  // ✅ Collect form input values
+  const data = {
+    name: document.getElementById("svcName").value.trim(),
+    county: document.getElementById("svcCounty").value,
+    subcounty: document.getElementById("svcSubCounty").value.trim(),
+    occupation: document.getElementById("svcOccupation").value.trim(),
+    experience: document.getElementById("svcExperience").value,
+    phone: document.getElementById("svcPhone").value.trim(),
+    postedBy: currentUser.uid,
+    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+  };
+
+  // Get the service ID from the hidden input field (for updates)
+  const serviceId = document.getElementById("serviceId")?.value;
+
+  // ✅ Validate all fields
+  if (Object.values(data).some(v => !v)) {
+    document.getElementById("loadingSpinner").style.display = "none"; // Hide spinner if validation fails
+    return alert("Please fill all fields.");
+  }
+
+  try {
+    if (serviceId) {
+      // **Updating an existing service**
+      await servicesRef.doc(serviceId).update(data); // Update service by ID
+      showCustomAlert("✅ Service updated!", "success");
+
+    } else {
+      // **Posting a new service**
+      // ✅ Check how many services this user has already posted
+      const serviceCountSnap = await servicesRef.where("postedBy", "==", currentUser.uid).get();
+      const totalServices = serviceCountSnap.size;
+
+      // ✅ If already posted 1 service, require payment — unless admin
+      if (totalServices >= 1 && !isAdmin) {
+        showPaymentModalFor("service", 200, currentUser.uid, "Post Extra Service");
+        document.getElementById("loadingSpinner").style.display = "none"; // Hide spinner if payment modal is shown
+        return;
+      }
+
+      // Save to Firestore as a new service
+      await servicesRef.add(data);
+      showCustomAlert("✅ Service posted!", "success");
+
+      // Admin Notification
+      await db.collection("adminNotifications").add({
+        type: "Marketplace Post",
+        message: `New service posted: ${data.name} (${data.occupation}), County: ${data.county}, Phone: ${data.phone}`,
+        timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+        read: false
+      });
+
+      // Public Alert for All Users
+      await db.collection("alerts").add({
+        title: "🛠️ New Service",
+        message: `${data.name} offers ${data.occupation} services in ${data.county}, ${data.subcounty}.`,
+        timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+        targetUserId: null,
+        category: "service",
+        county: data.county
+      });
+    }
+
+    // Reset the form and reload services
+    document.getElementById("serviceForm").reset();
+    loadServices(); // Refresh service list
+
+  } catch (err) {
+    showCustomAlert("❌ Error: " + err.message, "error");
+  } finally {
+    // Hide the spinner once the process completes
+    document.getElementById("loadingSpinner").style.display = "none";
   }
 }
 
@@ -7159,65 +7298,6 @@ async function deleteService(id) {
     document.getElementById("loadingSpinner").style.display = "none";
   });
 }
-
-// ✅ Edit service and rebind default submit
-function editService(data, id) {
-  document.getElementById("svcName").value = data.name;
-  document.getElementById("svcCounty").value = data.county;
-  document.getElementById("svcSubCounty").value = data.subcounty;
-  document.getElementById("svcOccupation").value = data.occupation;
-  document.getElementById("svcExperience").value = data.experience;
-  document.getElementById("svcPhone").value = data.phone;
-
-  const btn = document.querySelector("#serviceForm button");
-  btn.innerHTML = "Update Service";
-
-  // Show loading spinner while updating
-  document.getElementById("loadingSpinner").style.display = "flex";
-
-  // Replace the form element to remove previous listeners
-  const oldForm = document.getElementById("serviceForm");
-  const newForm = oldForm.cloneNode(true);
-  oldForm.parentNode.replaceChild(newForm, oldForm);
-
-  // Add update submit handler
-  newForm.addEventListener("submit", async function (e) {
-    e.preventDefault();
-    try {
-      const updated = {
-        name: document.getElementById("svcName").value,
-        county: document.getElementById("svcCounty").value,
-        subcounty: document.getElementById("svcSubCounty").value,
-        occupation: document.getElementById("svcOccupation").value,
-        experience: document.getElementById("svcExperience").value,
-        phone: document.getElementById("svcPhone").value,
-        postedBy: data.postedBy,
-        timestamp: firebase.firestore.FieldValue.serverTimestamp()
-      };
-
-      // Update the service
-      await servicesRef.doc(id).update(updated);
-
-      // Show success message
-      showCustomAlert("✅ Service updated.");
-      newForm.reset();
-      loadServices(); // Refresh service list
-
-      // Reset button text to default
-      btn.innerHTML = `<i class="fas fa-concierge-bell" style="margin-right:6px;"></i> Submit Service`;
-
-      // Reattach the default form submit handler
-      attachServiceFormSubmit(); // 👈 Reattach default
-
-    } catch (err) {
-      showCustomAlert("Error updating: " + err.message, "error");
-    } finally {
-      // Hide the loading spinner once the update is complete
-      document.getElementById("loadingSpinner").style.display = "none";
-    }
-  });
-}
-
 
 function filterServices() {
   const county = document.getElementById("filterServiceCounty").value;
@@ -10034,14 +10114,13 @@ function deleteMarketItem(id) {
       });
   });
 }
-
 async function loadTrendingItems() {
   const trendingContainer = document.getElementById("trendingContainer");
 
   // Show loading spinner at the center of the screen before fetching content
   document.getElementById("loadingSpinner").style.display = "flex"; // Show the spinner
 
-  // Show loading spinner before fetching content
+  // Display loading spinner content
   trendingContainer.innerHTML = `
     <div style="width: 100%; text-align: center; padding: 30px;">
       <i class="fas fa-spinner fa-spin" style="font-size: 36px; color: #ff5722;"></i>
@@ -10051,7 +10130,6 @@ async function loadTrendingItems() {
 
   // Create an array of async loaders for each section
   const loaders = [];
-
   if (typeof loadSwaps === "function") loaders.push(loadSwaps());
   if (typeof loadServices === "function") loaders.push(loadServices());
   if (typeof loadSoulmates === "function") loaders.push(loadSoulmates());
@@ -10061,7 +10139,7 @@ async function loadTrendingItems() {
   // Wait for all sections to load
   await Promise.allSettled(loaders);
 
-  // After loading is complete, continue with the trending section logic
+  // Define sections to check for trending items
   const allSections = [
     { id: "swapCardContainer", className: "swap-card", label: "Swaps" },
     { id: "jobContainer", className: "job-card", label: "Jobs" },
@@ -10091,17 +10169,9 @@ async function loadTrendingItems() {
         text.includes("🔥") ||
         (hasBoostedText && text.includes("trending"))
       ) {
-        const wrapper = document.createElement("div");
-        wrapper.className = "trending-highlight"; // Add animation class
-
-        // Add trending label
-        const labelTag = document.createElement("div");
-        labelTag.innerHTML = `<span style="font-size:13px; background:#ff5722; color:white; padding:3px 8px; border-radius:4px; font-weight:bold;">🔥 Trending from ${label}</span>`;
-        labelTag.style.marginBottom = "8px";
-
-        wrapper.appendChild(labelTag);
-        wrapper.appendChild(item.cloneNode(true));
-        foundItems.push(wrapper);
+        // Use a function to standardize the display format
+        const formattedItem = createTrendingItemWrapper(item, label);
+        foundItems.push(formattedItem);
       }
     });
   });
@@ -10119,6 +10189,22 @@ async function loadTrendingItems() {
   document.getElementById("loadingSpinner").style.display = "none"; // Hide the spinner
   trendingContainer.innerHTML = "";
   foundItems.forEach(card => trendingContainer.appendChild(card));
+}
+
+// Function to create consistent formatting for each trending item
+function createTrendingItemWrapper(item, label) {
+  const wrapper = document.createElement("div");
+  wrapper.className = "trending-highlight"; // Add animation class
+
+  // Add trending label
+  const labelTag = document.createElement("div");
+  labelTag.innerHTML = `<span style="font-size:13px; background:#ff5722; color:white; padding:3px 8px; border-radius:4px; font-weight:bold;">🔥 Trending from ${label}</span>`;
+  labelTag.style.marginBottom = "8px";
+
+  wrapper.appendChild(labelTag);
+  wrapper.appendChild(item.cloneNode(true));  // Clone the item to avoid moving original node
+
+  return wrapper;
 }
 
 function closeReviewModal() {
