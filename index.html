@@ -1884,6 +1884,17 @@ header a {
 ">
   ✅ You have been logged out successfully see you again .
 </div>
+<!-- Modal Structure -->
+<div id="followersModal" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.6); justify-content:center; align-items:center; z-index:1000;">
+  <div style="background-color: #f7f7f7; padding:20px; width:30%; max-width:400px; max-height:80%; overflow:auto; border-radius:8px; text-align:center; box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);">
+    <h2 style="color: #333; font-size: 1.5em; margin-bottom: 15px;">Followers</h2>
+    <ul id="followersList" style="list-style-type:none; padding:0; margin:0; height:200px; overflow-y:auto; text-align:left; color: #555;">
+      <!-- Followers will be listed here -->
+    </ul>
+    <button onclick="closeFollowersModal()" style="background-color: #4CAF50; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; margin-top: 15px;">Close</button>
+  </div>
+</div>
+
 
 <!-- ✅ How to Use the System Section -->
 <div id="usageHelp" class="page" style="display:none; padding: 20px;">
@@ -3963,6 +3974,72 @@ async function loadSwaps() {
   }
 }
 
+async function deleteSwap(swapId) {
+  // Show spinner when the deletion process starts
+  document.getElementById('loadingSpinner').style.display = 'flex';
+
+  // Show confirmation box
+  const existingBox = document.getElementById("inlineSwapConfirmBox");
+  if (existingBox) existingBox.remove();
+
+  const box = document.createElement("div");
+  box.id = "inlineSwapConfirmBox";
+  box.style.cssText = `
+    position: fixed;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #fff;
+    padding: 18px 24px;
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+    z-index: 9999;
+    font-family: 'Segoe UI', sans-serif;
+    text-align: center;
+    max-width: 90%;
+    width: 320px;
+    animation: fadeIn 0.3s ease;
+  `;
+
+  box.innerHTML = `
+    <p style="margin: 0 0 16px; font-size: 15px; color: #333;">
+      Are you sure you want to delete this swap?
+    </p>
+    <div style="display: flex; justify-content: center; gap: 10px;">
+      <button id="swapConfirmYesBtn" style="background: #d32f2f; color: white; border: none; border-radius: 6px; padding: 8px 16px; cursor: pointer;">🗑️ Yes</button>
+      <button id="swapConfirmNoBtn" style="background: #607d8b; color: white; border: none; border-radius: 6px; padding: 8px 16px; cursor: pointer;">Cancel</button>
+    </div>
+  `;
+
+  document.body.appendChild(box);
+
+  // Handle button actions
+  document.getElementById("swapConfirmYesBtn").onclick = async () => {
+    // Start deleting the swap
+    box.remove();
+    try {
+      // Wait for the deletion to complete
+      await db.collection("teacherSwaps").doc(swapId).delete();
+      showCustomAlert("✅ Swap deleted successfully.", "success");
+
+      // Reload swaps after deletion
+      loadSwaps();
+    } catch (err) {
+      console.error("Error deleting swap:", err);
+      showCustomAlert("❌ Failed to delete swap: " + err.message, "error");
+    } finally {
+      // Hide the spinner after operation completes
+      document.getElementById('loadingSpinner').style.display = 'none';
+    }
+  };
+
+  document.getElementById("swapConfirmNoBtn").onclick = () => {
+    box.remove(); // Close the confirmation box if canceled
+    showCustomAlert("❎ Deletion canceled.", "info");
+    // Hide the spinner if user cancels
+    document.getElementById('loadingSpinner').style.display = 'none';
+  };
+}
 
 // ✅ Admin instant verification handler 
 function adminVerifyItem(type, itemId) {
@@ -3995,8 +4072,6 @@ function adminVerifyItem(type, itemId) {
   }
 }
 
-
-// Function to show followers' first names (from email)
 async function showFollowers(swapId) {
   const swapRef = db.collection("teacherSwaps").doc(swapId);
   const swapDoc = await swapRef.get();
@@ -4007,14 +4082,35 @@ async function showFollowers(swapId) {
   }
 
   const followers = swapDoc.data().followers || [];
-  const followerNames = followers.map(f => {
-    // Extract the first name from email (before @)
-    const firstName = f.email ? f.email.split('@')[0] : 'Anonymous';
-    return firstName;
-  }).join(", ");
+  const followersList = document.getElementById('followersList');
 
-  alert(`Followers: ${followerNames}`);
+  if (followers.length === 0) {
+    // If no followers, display a message
+    followersList.innerHTML = "<li>No followers for now.</li>";
+  } else {
+    // If there are followers, list their names
+    const followerNames = followers.map(f => {
+      const firstName = f.email ? f.email.split('@')[0] : 'Anonymous';
+      return `<li style="padding: 5px; border-bottom: 1px solid #eee;">${firstName}</li>`;
+    }).join("");
+    followersList.innerHTML = followerNames;
+  }
+
+  // Show the modal
+  document.getElementById('followersModal').style.display = 'flex';
 }
+
+// Function to close the modal
+function closeFollowersModal() {
+  document.getElementById('followersModal').style.display = 'none';
+}
+
+
+// Function to close the modal
+function closeFollowersModal() {
+  document.getElementById('followersModal').style.display = 'none';
+}
+
 
 // Function to follow a swap
 async function followSwap(swapId) {
@@ -4116,14 +4212,17 @@ async function sendFollowAdminNotification(swapId, currentUser) {
   console.log("Admin notification sent for swap follow.");
 }
 
-
 async function toggleSwapStatus(swapId) {
+  const spinner = document.getElementById('loadingSpinner'); // Assuming you have a spinner element with this ID
+  spinner.style.display = 'block'; // Show spinner
+  
   try {
     const swapDoc = await db.collection("teacherSwaps").doc(swapId).get();
     const swapData = swapDoc.data();
 
     if (!swapData) {
       showCustomAlert("❌ Swap not found.", "error");
+      spinner.style.display = 'none'; // Hide spinner
       return;
     }
 
@@ -4153,8 +4252,11 @@ async function toggleSwapStatus(swapId) {
   } catch (error) {
     console.error("❌ Error updating swap status:", error);
     showCustomAlert("❌ Failed to update swap: " + error.message, "error");
+  } finally {
+    spinner.style.display = 'none'; // Hide spinner in case of success or error
   }
 }
+
 
 
 // Function to send an admin notification when a swap is closed
@@ -5669,8 +5771,27 @@ async function loadSoulmates() {
         <button onclick="unlockSoulmateContacts()" style="margin-top:5px;background:crimson;color:white;border:none;padding:4px 10px;border-radius:4px;">💳 Pay</button>
       </div>`;
 
-    card.innerHTML = `
-      ${d.verified ? `<div class="verified-badge" style="position:absolute;top:8px;right:8px;background:#4caf50;color:white;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:12px;"><i class="fas fa-check"></i></div>` : ""}
+ card.innerHTML = `
+  ${d.verified ? `<div class="verified-badge" style="
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background-color: #f44336;  /* Red color */
+    color: white;
+    border-radius: 15%;  /* Changed to a perfect circle */
+    width: 10px;  /* Adjusted size */
+    height: 10px;  /* Adjusted size */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;  /* Slightly larger for better visibility */
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    transition: transform 0.3s ease-in-out;
+    cursor: pointer;
+  ">
+    <i class="fas fa-check" style="transform: scale(1.2);"></i>
+  </div>` : ""}
+
 
       ${!d.verified && isPoster && !isAdminUser ? `
         <button onclick="showPaymentModalFor('soulmateVerification', 200, '${id}', '${d.name || ''}')"
@@ -8832,28 +8953,6 @@ function confirmDeleteSwap(callback) {
   progressBar.style.width = "100%";
   startCountdown();
 }
-async function deleteSwap(id) {
-  try {
-    const confirmed = await confirmDeleteSwap();
-    if (!confirmed) {
-      showToast("Deletion cancelled.", "warning");
-      return;
-    }
-
-    // Proceed with deletion if confirmed
-    await db.collection("teacherSwaps").doc(id).delete();
-    showToast("Swap deleted successfully.", "success");
-
-    // Reload the swaps list after deletion
-    loadSwaps(); 
-
-  } catch (error) {
-    console.error("Delete failed:", error);
-    const errorMessage = error.message || "An unexpected error occurred.";
-    showToast(`❌ Failed to delete swap: ${errorMessage}`, "error");
-  }
-}
-
 
 function showCustomAlert(message, type = "info") {
   const alertBox = document.createElement("div");
@@ -9366,13 +9465,23 @@ function confirmDeleteAdminNotification(notificationId) {
 }
 
 async function deleteAdminNotification(notificationId) {
+  // Show spinner when deletion starts
+  document.getElementById('loadingSpinner').style.display = 'flex';
+
   try {
     await db.collection("adminNotifications").doc(notificationId).delete();
+    // Hide spinner after successful deletion
+    document.getElementById('loadingSpinner').style.display = 'none';
+
     showCustomAlert("🗑️ Notification deleted", "success");
   } catch (error) {
+    // Hide spinner if there is an error
+    document.getElementById('loadingSpinner').style.display = 'none';
+
     showCustomAlert("❌ Error deleting: " + error.message, "error");
   }
 }
+
 
 // ✅ Delete all (toast confirm)
 function confirmDeleteAllAdminNotifications() {
@@ -9401,17 +9510,30 @@ function confirmMarkAllAdminNotificationsAsRead(unreadCount) {
 }
 
 async function markAllAdminNotificationsAsRead() {
+  // Show spinner when the process starts
+  document.getElementById('loadingSpinner').style.display = 'flex';
+
   try {
     const snapshot = await db.collection("adminNotifications").get();
     if (snapshot.empty) {
+      // Hide the spinner if no notifications are found
+      document.getElementById('loadingSpinner').style.display = 'none';
       showCustomAlert("ℹ️ No unread notifications", "info");
       return;
     }
+
     const batch = db.batch();
     snapshot.forEach(doc => batch.update(doc.ref, { read: true }));
+    
+    // Commit the batch
     await batch.commit();
+
+    // Hide the spinner after the operation is successful
+    document.getElementById('loadingSpinner').style.display = 'none';
     showCustomAlert("✅ All marked as read", "success");
   } catch (error) {
+    // Hide the spinner if an error occurs
+    document.getElementById('loadingSpinner').style.display = 'none';
     showCustomAlert("❌ Error marking all as read: " + error.message, "error");
   }
 }
@@ -9510,13 +9632,20 @@ async function deleteNotification(id) {
   document.body.appendChild(box);
 
   document.getElementById("notifConfirmYesBtn").onclick = async () => {
+    // Show spinner when deletion starts
+    document.getElementById('loadingSpinner').style.display = 'flex';
+
     box.remove();
     try {
+      // Attempt to delete the notification
       await db.collection("adminNotifications").doc(id).delete();
       loadAdminNotifications();
       updateAdminNotifBadge();
 
-      // ✅ Safe toast usage
+      // Hide spinner after deletion completes
+      document.getElementById('loadingSpinner').style.display = 'none';
+
+      // Show success toast
       try {
         showCustomToast("✅ Notification deleted.");
       } catch (toastErr) {
@@ -9524,6 +9653,9 @@ async function deleteNotification(id) {
       }
 
     } catch (err) {
+      // Hide spinner in case of error
+      document.getElementById('loadingSpinner').style.display = 'none';
+
       console.error("Error deleting notification:", err);
       showCustomAlert("❌ Failed to delete: " + err.message, "error");
     }
@@ -9534,22 +9666,47 @@ async function deleteNotification(id) {
   };
 }
 
- async function rateService(serviceId, stars) {
-  if (!currentUser) return alert("Please login to rate.");
+async function rateService(serviceId, stars) {
+  if (!currentUser) {
+    showCustomAlert("Error", "Please login to rate.");
+    return;
+  }
   
   const userId = currentUser.uid;
   const ratingRef = db.collection("ratings").doc(serviceId).collection("byUser").doc(userId);
 
   const existing = await ratingRef.get();
-  if (existing.exists) return alert("You already rated this service.");
+  if (existing.exists) {
+    showCustomAlert("Error", "You already rated this service.");
+    return;
+  }
 
-  await ratingRef.set({
-    stars,
-    ratedAt: firebase.firestore.FieldValue.serverTimestamp()
-  });
+  // Show the spinner before the operation begins
+  document.getElementById('loadingSpinner').style.display = 'flex';
 
-  updateAverageRating(serviceId);
+  try {
+    // Perform the rating
+    await ratingRef.set({
+      stars,
+      ratedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+
+    // Update the average rating
+    updateAverageRating(serviceId);
+
+    // Show success alert
+    showCustomAlert("Success", "Your rating has been submitted.");
+  } catch (err) {
+    // Show error alert if the operation fails
+    console.error("Error submitting rating:", err);
+    showCustomAlert("Error", "Failed to submit your rating. Please try again.");
+  } finally {
+    // Hide the spinner after the operation is complete
+    document.getElementById('loadingSpinner').style.display = 'none';
+  }
 }
+
+
 async function updateAverageRating(serviceId) {
   const ratingSnap = await db.collection("ratings").doc(serviceId).collection("byUser").get();
   const total = ratingSnap.docs.reduce((sum, doc) => sum + doc.data().stars, 0);
@@ -9823,12 +9980,22 @@ async function deleteSoulmate(id) {
 
   // Handle button events
   document.getElementById("confirmYesBtn").onclick = async () => {
+    // Show spinner
+    document.getElementById('loadingSpinner').style.display = 'flex';
+
     box.remove();
     try {
       await soulmateRef.doc(id).delete();
+
+      // Hide spinner after deletion
+      document.getElementById('loadingSpinner').style.display = 'none';
+
       showCustomAlert("✅ Profile deleted successfully.", "success");
-      loadSoulmates();
+      loadSoulmates(); // Refresh the soulmates list
     } catch (err) {
+      // Hide spinner if error occurs
+      document.getElementById('loadingSpinner').style.display = 'none';
+
       console.error("Error deleting soulmate:", err);
       showCustomAlert("❌ Failed to delete: " + err.message, "error");
     }
@@ -9845,20 +10012,29 @@ async function deleteSoulmate(id) {
     const notes = document.getElementById("usageNotes");
     notes.style.display = notes.style.display === "none" ? "block" : "none";
   }
+function deleteMarketItem(id) {
+  // Show spinner
+  document.getElementById('loadingSpinner').style.display = 'flex';
 
-function deleteMarketItem(id) { 
   showCustomConfirm("Are you sure you want to delete this market item?", () => {
     marketRef.doc(id).delete()
       .then(() => {
+        // Hide spinner after deletion is successful
+        document.getElementById('loadingSpinner').style.display = 'none';
+
         showCustomAlert("🗑️ Item deleted successfully.", "success");
-        loadMarketItems(); // refresh
+        loadMarketItems(); // refresh the market items
       })
       .catch(err => {
+        // Hide spinner if error occurs
+        document.getElementById('loadingSpinner').style.display = 'none';
+
         console.error("❌ Error deleting item:", err);
         showCustomAlert("❌ Error deleting item: " + err.message, "error");
       });
   });
 }
+
 async function loadTrendingItems() {
   const trendingContainer = document.getElementById("trendingContainer");
 
